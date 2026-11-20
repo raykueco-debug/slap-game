@@ -334,7 +334,7 @@ function render() {
     ctx.save(); if (s2.flip) ctx.scale(-1, 1); ctx.drawImage(s2.im, -w / 2, L.feet - h + (s2.dy || 0), w, h); ctx.restore();
   }
   const order = ko && (ko.phase === 'beg' || ko.phase === 'land')
-    ? ORDER.filter(k => !['hairBack', 'head', 'face', 'faceHurt', 'hairFront'].includes(k)).concat(['hairBack', 'head', 'face', 'faceHurt', 'hairFront'])
+    ? ORDER.filter(k => !['hairBack', 'head', 'face', 'faceHurt', 'hairFront'].includes(k)).concat(['hairBack', 'head', 'hairFront', 'face', 'faceHurt'])
     : ORDER;
   if (!spr) for (const key of order) {
     if (key === 'face' && hurt) continue;

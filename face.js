@@ -102,6 +102,10 @@ window.FACEMATCH = (() => {
     return best;
   }
 
+  // 膚色：只看亮度分級（手機照片常偏暗、偏暖，色相不可靠），門檻往暗的方向放寬
+  function skinPick(rel) {
+    return rel > 0.86 ? 'fair' : rel > 0.74 ? 'light' : rel > 0.66 ? 'tan' : rel > 0.5 ? 'brown' : 'dark';
+  }
   // 髮色：灰階（飽和度低）只看亮度 → 黑／灰白；有顏色才比色相
   function hairColorPick(rgb) {
     const [r, g, b] = rgb.map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
@@ -138,6 +142,11 @@ window.FACEMATCH = (() => {
       sr += c[0]; sg += c[1]; sb += c[2]; sn++;
     }
     const skinRGB = sn ? [sr / sn, sg / sn, sb / sn] : at(Lm[50].x, Lm[50].y);
+    // 照片亮部基準（第 95 百分位亮度）：用來校正曝光，膚色看「相對亮度」
+    const hist = new Array(256).fill(0); let tot = 0;
+    for (let i = 0; i < px.length; i += 16) { hist[Math.min(255, lum(px[i], px[i + 1], px[i + 2]) | 0)]++; tot++; }
+    let acc95 = 0, p95 = 255; for (let v = 0; v < 256; v++) { acc95 += hist[v]; if (acc95 >= tot * 0.95) { p95 = v; break; } }
+    const skinRel = lum(...skinRGB) / Math.max(120, p95);
 
     // 頭髮：遮罩統計
     const hairPx = [];
@@ -190,7 +199,14 @@ window.FACEMATCH = (() => {
     }
     for (const i of [50, 280, 205, 425]) for (let k = 0; k < 12; k++) { ck += edge(Lm[i].x + (k % 4) * 2, Lm[i].y + (k >> 2) * 2); cn++; }
     const rim = (er / en) / Math.max(4, ck / cn), skinL = lum(...skinRGB), eyeDark = (eyeL / eyeN) / skinL;
-    const glasses = eyeDark < 0.35 ? 'g_sun' : rim > 3.2 ? (rim > 4.5 ? 'g_thick' : 'g_square') : null;
+    // 分割模型第 5 類＝配件（眼鏡常被分在這）：看兩眼周圍與鼻樑有多少像素是配件
+    let acc = 0, accN = 0;
+    for (const [c0, c1] of [[33, 133], [263, 362]]) {
+      const ex = (Lm[c0].x + Lm[c1].x) / 2, ey = (Lm[c0].y + Lm[c1].y) / 2, rr = d(c0, c1);
+      for (let y = ey - rr * 0.7; y < ey + rr * 0.7; y += 2) for (let x = ex - rr * 0.9; x < ex + rr * 0.9; x += 2) { accN++; if (cat(x, y) === 5) acc++; }
+    }
+    const accF = acc / Math.max(1, accN);
+    const glasses = (accF > 0.12 && eyeDark < 0.45) || eyeDark < 0.3 ? 'g_sun' : accF > 0.06 ? (accF > 0.2 ? 'g_thick' : 'g_square') : null;
 
     // 鬍子（男）：下巴、上唇、下顎附近有多少像素被分割成「毛髮」
     let beard = null;
@@ -211,7 +227,7 @@ window.FACEMATCH = (() => {
     const hairCat = 'hair_' + g, faceCat = 'face_' + g;
     const pick = {
       gender: g,
-      skin: colorNearest(AV.SKIN, skinRGB, true),
+      skin: skinPick(skinRel),
       hairColor: hairColorPick(hairRGB),
       hair: feat.bald ? 'bald' : nearest(HAIR_TAG[hairCat], feat, { fr: 3, len: 2, vol: 1.5, wid: 1, asym: 1, bald: 2 }),
       face: nearest(FACE_TAG[faceCat], ff, { ar: 30, tilt: 2, size: 2, uneven: 1, lips: .5 }),
@@ -223,7 +239,7 @@ window.FACEMATCH = (() => {
     if (pick.hair !== 'bald' && !(LIB[hairCat] && LIB[hairCat][pick.hair])) delete pick.hair;
     if (!(LIB[faceCat] && LIB[faceCat][pick.face])) delete pick.face;
     if (!(LIB.head && LIB.head[pick.head])) delete pick.head;
-    return { pick, debug: { feat, ff, hf, hairArea: +hairArea.toFixed(2), beard: beardDbg, rim: +rim.toFixed(2), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
+    return { pick, debug: { feat, ff, hf, hairArea: +hairArea.toFixed(2), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
   }
   return { analyze, HAIR_TAG, FACE_TAG, HEAD_TAG };
 })();

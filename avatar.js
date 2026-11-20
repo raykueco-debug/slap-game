@@ -159,10 +159,19 @@ window.AVATAR = (() => {
     // 五官
     jobs.push((async () => {
       const e = cur.face !== 'orig' && LIB[faceCat()] && LIB[faceCat()][cur.face];
-      if (!e) return () => { restore('face'); restore('faceHurt'); };
-      const [si, hi] = await Promise.all([loadImg(e.smug.file), loadImg(e.hurt.file)]);
+      if (!e) return () => { restore('face'); restore('faceHurt'); P.face.mouth = P.faceHurt.mouth = null; };
+      // 眼睛眉毛與嘴巴分開：眼睛照原本頂端對齊；嘴巴放到原臉嘴巴的位置、寬度貼近原臉
+      const L = l => l.eyes || l.file;
+      const [si, hi, sm, hm] = await Promise.all([loadImg(L(e.smug)), loadImg(L(e.hurt)),
+        e.smug.mouth ? loadImg(e.smug.mouth.file) : null, e.hurt.mouth ? loadImg(e.hurt.mouth.file) : null]);
       return () => {
-        for (const [k, im, info] of [['face', si, e.smug], ['faceHurt', hi, e.hurt]]) {
+        for (const [k, im, info, mim, ref] of [['face', si, e.smug, sm, META.mouth && META.mouth.smug], ['faceHurt', hi, e.hurt, hm, META.mouth && META.mouth.hurt]]) {
+          P[k].mouth = null;
+          if (mim && ref) {
+            const ow = ref.w * U, w0 = info.mouth.w * info.scale * U;
+            const w = ow * Math.max(0.85, Math.min(1.15, w0 / ow));
+            P[k].mouth = { im: mim, w, h: w * mim.naturalHeight / mim.naturalWidth, x: ref.cx * U, y: ref.cy * U };
+          }
           // 眉毛（圖頂）對齊原臉的眉毛：原臉圖頂在支點上方 原高/2
           const p = P[k]; p.im = toCanvas(im); p.w = info.w * info.scale * U; p.ax = 0.5;
           const h = p.w * im.naturalHeight / im.naturalWidth, oTop = ORIG[k].ay * ORIG[k].im.naturalHeight * (230 / 377);
@@ -245,6 +254,9 @@ window.AVATAR = (() => {
     return true;
   }
   function afterPart(key, ctx) {
+    if ((key === 'face' || key === 'faceHurt') && P[key].mouth) {
+      const m = P[key].mouth; ctx.drawImage(m.im, m.x - m.w / 2, m.y - m.h / 2, m.w, m.h);
+    }
     if (key === 'face' || key === 'faceHurt') for (const id of accIn('face')) drawAcc(ctx, id, false);
     if (key === 'hairFront' || (key === 'hairBack' && P.hairFront.hidden)) {
       ctx.save(); ctx.translate(-P.hairFront.x, -P.hairFront.y); for (const id of accIn('head')) drawAcc(ctx, id, false); ctx.restore();

@@ -19,7 +19,8 @@ window.PARTS = {
 };
 // 繪製順序（後面的蓋前面）
 // torso（含後領）→ head（脖子）→ torsoCollar（翻領／V領邊蓋住脖子下緣）→ 手 → 臉、前髮
-window.DRAW_ORDER = ['hairBack','legs','torso','head','torsoCollar','armL','armR','face','faceHurt','hairFront'];
+// 五官畫在前髮之上（瀏海不蓋眼睛）
+window.DRAW_ORDER = ['hairBack','legs','torso','head','torsoCollar','armL','armR','hairFront','face','faceHurt'];
 window.HEAD_UNIT_W = 230; // 頭的基準寬（角色座標）
 // 版面（角色座標）：top＝頭頂、feet＝腳底、headY＝頭中心、neckY＝脖子
 window.LAYOUT = { top: -450, feet: 205, headY: -315, neckY: -200 };

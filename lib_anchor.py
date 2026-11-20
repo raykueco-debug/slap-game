@@ -60,6 +60,42 @@ def fit_anchor(im):
     return cy, cx, r
 
 
+def split_mouth(im):
+    """五官圖拆成（眼睛眉毛圖, 嘴巴圖, 嘴巴資訊）；嘴巴＝下半部、靠近中線的相連圖形"""
+    from slice_grid import label
+    W, H = im.size
+    al = im.getchannel('A')
+    lab, comps = label(al, W, H)
+    n = len(comps)
+    sx = [0] * (n + 1); sy = [0] * (n + 1); cnt = [0] * (n + 1)
+    for y in range(H):
+        row = y * W
+        for x in range(W):
+            c = lab[row + x]
+            if c:
+                sx[c] += x; sy[c] += y; cnt[c] += 1
+    mouth = set()
+    for c in range(1, n + 1):
+        if cnt[c] < 30:
+            continue
+        cx, cy = sx[c] / cnt[c], sy[c] / cnt[c]
+        if abs(cx - W / 2) < W * 0.22 and cy > H * 0.58:
+            mouth.add(c)
+    if not mouth:
+        return None
+    px = im.load()
+    eyes = im.copy(); ep = eyes.load()
+    mo = Image.new('RGBA', im.size, (0, 0, 0, 0)); mp = mo.load()
+    for y in range(H):
+        row = y * W
+        for x in range(W):
+            if lab[row + x] in mouth:
+                mp[x, y] = px[x, y]; ep[x, y] = (0, 0, 0, 0)
+    bb = mo.getchannel('A').getbbox()
+    info = {'cx': (bb[0] + bb[2]) / 2 - W / 2, 'cy': (bb[1] + bb[3]) / 2 - H / 2, 'w': bb[2] - bb[0]}
+    return eyes, mo.crop(bb), info
+
+
 def main():
     man_path = os.path.join(ROOT, 'lib', 'manifest.json')
     man = json.load(open(man_path, encoding='utf-8'))
@@ -119,6 +155,15 @@ def main():
             for layer in ('smug', 'hurt'):
                 if e.get(layer):
                     e[layer]['scale'] = scales.get('face', 1)
+                    f = e[layer]['file']; src = os.path.join(ROOT, f)
+                    sp = split_mouth(Image.open(src).convert('RGBA'))
+                    if sp:
+                        ef, mf = f.replace('.png', '_eyes.png'), f.replace('.png', '_mouth.png')
+                        sp[0].save(os.path.join(ROOT, ef)); sp[1].save(os.path.join(ROOT, mf))
+                        e[layer]['eyes'] = ef
+                        e[layer]['mouth'] = dict(sp[2], file=mf, mw=sp[1].width, mh=sp[1].height)
+                    else:
+                        e[layer].pop('eyes', None); e[layer].pop('mouth', None)
             if cat == 'head':
                 e['scale'] = scales['head']         # 整張表同一比例；頭頂對齊原頭頭頂（avatar.js）
             if cat == 'acc':
@@ -163,7 +208,8 @@ def main():
 
     json.dump(man, open(man_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     meta = {'refFront': ref_f[0] / o_hf.height, 'refBack': ref_b[0] / o_hb.height,
-            'headSky': hcy / o_head.height, 'headW': o_head.width, 'headH': o_head.height}
+            'headSky': hcy / o_head.height, 'headW': o_head.width, 'headH': o_head.height,
+            'mouth': {'smug': split_mouth(o_face.convert('RGBA'))[2], 'hurt': split_mouth(Image.open(f'{P}/face_hurt.png').convert('RGBA'))[2]}}
     with open(os.path.join(ROOT, 'lib', 'manifest.js'), 'w', encoding='utf-8') as f:
         f.write('window.STYLE_LIB = ' + json.dumps(man, ensure_ascii=False) + ';\n')
         f.write('window.STYLE_META = ' + json.dumps(meta) + ';\n')
