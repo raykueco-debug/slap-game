@@ -96,6 +96,30 @@ def split_mouth(im):
     return eyes, mo.crop(bb), info
 
 
+def head_geo(im):
+    """頭的幾何：頭頂、下巴（脖子以上）、頭殼寬（上半部最寬，不含耳朵）、中心 x（皆為圖片 px）"""
+    al = im.getchannel('A').load(); W, H = im.size
+    rows = []
+    for y in range(H):
+        xs = [x for x in range(0, W, 1) if al[x, y] > TH]
+        rows.append((xs[0], xs[-1]) if xs else None)
+    top = next(y for y in range(H) if rows[y])
+    mw = max((r[1] - r[0]) for r in rows if r)
+    nb = next(y for y in range(H - 1, 0, -1) if rows[y])            # 脖子底
+    ny = int(nb - (nb - top) * 0.08)                                 # 脖子中段（避開最底下收尾的描邊）
+    while ny > top and not rows[ny]:
+        ny -= 1
+    neckW = rows[ny][1] - rows[ny][0]
+    chin = ny
+    for y in range(ny, top, -1):                 # 從脖子最細處往上：比脖子寬 1.6 倍的那排＝下巴最低點
+        if rows[y] and rows[y][1] - rows[y][0] > neckW * 1.6:
+            chin = y; break
+    lim = top + int((chin - top) * 0.42)
+    best = max(((rows[y][1] - rows[y][0], y) for y in range(top, lim) if rows[y]))
+    y = best[1]
+    return {'top': top, 'chin': chin, 'sw': best[0], 'cx': (rows[y][0] + rows[y][1]) / 2, 'W': W, 'H': H}
+
+
 def main():
     man_path = os.path.join(ROOT, 'lib', 'manifest.json')
     man = json.load(open(man_path, encoding='utf-8'))
@@ -166,6 +190,7 @@ def main():
                         e[layer].pop('eyes', None); e[layer].pop('mouth', None)
             if cat == 'head':
                 e['scale'] = scales['head']         # 整張表同一比例；頭頂對齊原頭頭頂（avatar.js）
+                e['geo'] = head_geo(Image.open(os.path.join(ROOT, e['file'])))
             if cat == 'acc':
                 e['scale'] = scales['acc']
     # 原圖瀏海最寬排在 head 座標：hair_front 放在 head (0,-232)、ay=0 → 最寬排 y = -232 + ref_f[0]*unit
@@ -209,6 +234,7 @@ def main():
     json.dump(man, open(man_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     meta = {'refFront': ref_f[0] / o_hf.height, 'refBack': ref_b[0] / o_hb.height,
             'headSky': hcy / o_head.height, 'headW': o_head.width, 'headH': o_head.height,
+            'headGeo': head_geo(o_head),
             'mouth': {'smug': split_mouth(o_face.convert('RGBA'))[2], 'hurt': split_mouth(Image.open(f'{P}/face_hurt.png').convert('RGBA'))[2]}}
     with open(os.path.join(ROOT, 'lib', 'manifest.js'), 'w', encoding='utf-8') as f:
         f.write('window.STYLE_LIB = ' + json.dumps(man, ensure_ascii=False) + ';\n')

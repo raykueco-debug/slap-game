@@ -116,9 +116,20 @@ window.AVATAR = (() => {
   const hairColor = () => (HAIRC.find(s => s.id === cur.hairColor) || HAIRC[0]).c;
   const hairCat = () => 'hair_' + cur.gender, faceCat = () => 'face_' + cur.gender, bodyCat = () => 'body_' + cur.gender;
 
+  // 頭的幾何（head 座標）：頭頂、下巴、頭殼寬、中心 x；頭髮與五官都依「目前這顆頭」定位
+  let G = null, G0 = null, SH = 1, SF = 1;
+  function geoOf(headId) {
+    const topU = ORIG.head.ay * META.headH * U, g0 = META.headGeo;
+    const e = headId !== 'orig' && LIB.head && LIB.head[headId];
+    const g = e && e.geo ? e.geo : g0, k = e && e.geo ? e.scale * U : U;
+    return { top: -topU + g.top * k, chin: -topU + g.chin * k, sw: g.sw * k, cx: (g.cx - g.W / 2) * k };
+  }
+  const mapY = y => G.top + (y - G0.top) * SH;          // 原頭上的高度 → 目前這顆頭
   async function apply() {
     if (!ready) return;
     const my = ++version;
+    G0 = geoOf('orig'); G = geoOf(cur.head); SH = G.sw / G0.sw; SF = Math.max(0.8, Math.min(1.2, SH));
+    const faceY = G.top + (ORIG.face.y - G0.top) / (G0.chin - G0.top) * (G.chin - G.top);
     const sk = skinColor(), hc = hairColor();
     const jobs = [];
     // 頭
@@ -141,7 +152,8 @@ window.AVATAR = (() => {
       if (!e) {
         const [f, b] = [ORIG.hairFront.im, ORIG.hairBack.im];
         return () => { restore('hairFront'); restore('hairBack'); P.hairFront.hidden = P.hairBack.hidden = false;
-          if (cur.hairColor !== 'black') { P.hairFront.im = recolorHair(f, hc, false); P.hairBack.im = recolorHair(b, hc, false); } };
+          if (cur.hairColor !== 'black') { P.hairFront.im = recolorHair(f, hc, false); P.hairBack.im = recolorHair(b, hc, false); }
+          for (const k of ['hairFront', 'hairBack']) { const p = P[k]; p.w = ORIG[k].im.naturalWidth * U * SH; p.x = G.cx; p.y = mapY(ORIG[k].y); } };
       }
       const fi = e.front ? await loadImg(e.front.file) : null, bi = e.back ? await loadImg(e.back.file) : null;
       return () => {
@@ -150,8 +162,8 @@ window.AVATAR = (() => {
         for (const [k, im, info, ay0] of [['hairFront', fi, e.front, fy], ['hairBack', bi, e.back, by]]) {
           const p = P[k]; p.hidden = !im;
           if (!im) continue;
-          p.im = recolorHair(im, hc, true); p.w = info.w * info.scale * U;
-          p.ax = info.ax; p.ay = info.ay; p.x = info.dx || 0; p.y = ay0 + (info.dy || 0);
+          p.im = recolorHair(im, hc, true); p.w = info.w * info.scale * U * SH;
+          p.ax = info.ax; p.ay = info.ay; p.x = G.cx + (info.dx || 0) * SH; p.y = mapY(ay0 + (info.dy || 0));
         }
         P.hairBack.long = !!e.long;
       };
@@ -159,7 +171,7 @@ window.AVATAR = (() => {
     // 五官
     jobs.push((async () => {
       const e = cur.face !== 'orig' && LIB[faceCat()] && LIB[faceCat()][cur.face];
-      if (!e) return () => { restore('face'); restore('faceHurt'); P.face.mouth = P.faceHurt.mouth = null; };
+      if (!e) return () => { for (const k of ['face', 'faceHurt']) { restore(k); P[k].mouth = null; P[k].w = ORIG[k].im.naturalWidth * U * SF; P[k].x = G.cx; P[k].y = faceY; } };
       // 眼睛眉毛與嘴巴分開：眼睛照原本頂端對齊；嘴巴放到原臉嘴巴的位置、寬度貼近原臉
       const L = l => l.eyes || l.file;
       const [si, hi, sm, hm] = await Promise.all([loadImg(L(e.smug)), loadImg(L(e.hurt)),
@@ -170,11 +182,11 @@ window.AVATAR = (() => {
           if (mim && ref) {
             const ow = ref.w * U, w0 = info.mouth.w * info.scale * U;
             const w = ow * Math.max(0.85, Math.min(1.15, w0 / ow));
-            P[k].mouth = { im: mim, w, h: w * mim.naturalHeight / mim.naturalWidth, x: ref.cx * U, y: ref.cy * U };
+            P[k].mouth = { im: mim, w: w * SF, h: w * SF * mim.naturalHeight / mim.naturalWidth, x: ref.cx * U * SF, y: ref.cy * U * SF };
           }
           // 眉毛（圖頂）對齊原臉的眉毛：原臉圖頂在支點上方 原高/2
-          const p = P[k]; p.im = toCanvas(im); p.w = info.w * info.scale * U; p.ax = 0.5;
-          const h = p.w * im.naturalHeight / im.naturalWidth, oTop = ORIG[k].ay * ORIG[k].im.naturalHeight * (230 / 377);
+          const p = P[k]; p.im = toCanvas(im); p.w = info.w * info.scale * U * SF; p.ax = 0.5; p.x = G.cx; p.y = faceY;
+          const h = p.w * im.naturalHeight / im.naturalWidth, oTop = ORIG[k].ay * ORIG[k].im.naturalHeight * U * SF;
           p.ay = oTop / h;
         }
       };
@@ -232,7 +244,14 @@ window.AVATAR = (() => {
   // ---------- 繪製掛勾（game.js 每個部件畫之前／之後呼叫） ----------
   function drawAcc(ctx, id, under) {
     const pos = ACC_POS[id], im = accImgs[id + '_c'] || accImgs[id];
-    if (!pos || !im || !!pos.under !== !!under) return;
+    if (!pos || !im || !G || !!pos.under !== !!under) return;
+    ctx.save();
+    if (pos.space === 'face') ctx.scale(SF, SF);                                   // 跟著五官縮放
+    if (pos.space === 'head') { ctx.translate(G.cx, G.top - G0.top * SH); ctx.scale(SH, SH); }  // 跟著頭縮放
+    drawAccRaw(ctx, pos, im);
+    ctx.restore();
+  }
+  function drawAccRaw(ctx, pos, im) {
     const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height, ay = pos.ay == null ? 0.5 : pos.ay;
     if (pos.pair) { // 成對的（耳環、雀斑）：圖切左右兩半，各放一邊
       const hw = iw / 2, w = pos.w, h = w * ih / hw;
@@ -247,8 +266,9 @@ window.AVATAR = (() => {
   function beforePart(key, ctx) {
     const p = P[key];
     if (p && p.hidden) return false;                        // 不畫
-    if (key === 'hairBack' && !p.long) {                    // 短髮：後髮截在下巴以上
-      ctx.beginPath(); ctx.rect(-2000, -2000, 4000, 2000 + (CLIP_Y - p.y)); ctx.clip();
+    if (key === 'hairBack' && !p.long && G) {                    // 短髮：後髮截在下巴以上
+      const clipY = G.chin - (G0.chin - CLIP_Y) * SH;
+      ctx.beginPath(); ctx.rect(-2000, -2000, 4000, 2000 + (clipY - p.y)); ctx.clip();
     }
     if (key === 'face' || key === 'faceHurt') for (const id of accIn('face')) drawAcc(ctx, id, true);
     return true;
@@ -264,7 +284,7 @@ window.AVATAR = (() => {
     if (key === 'torsoCollar') for (const id of accIn('torso')) drawAcc(ctx, id, false);
   }
   // 腫包／暈眩星星要畫在「頭頂」：回傳 hairFront 座標到原頭頂的位移
-  function headTopOffset() { return [-P.hairFront.x, -232 - P.hairFront.y]; }
+  function headTopOffset() { return G ? [G.cx - P.hairFront.x, mapY(-232) - P.hairFront.y] : [-P.hairFront.x, -232 - P.hairFront.y]; }
 
   return {
     LIB, SKIN, HAIRC, ACC_POS, SLOTS, DEF,
