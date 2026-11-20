@@ -111,7 +111,7 @@ function update(dt) {
   // 台詞
   if (bubble) { bubble.life -= dt; if (bubble.life <= 0) bubble = null; }
   if (!ko && !bubble && hurtT <= 0 && idleT > nextTaunt) {
-    bubble = { txt: pick(beenHit ? HURT_TAUNTS : TAUNTS), life: 2.0, max: 2.0 };
+    bubble = { txt: pick(beenHit ? HURT_TAUNTS : TAUNTS), life: 2.0, max: 2.0, kind: beenHit ? 'hurt' : 'taunt' };
     nextTaunt = idleT + rand(4, 7);
   }
   if (ko) updateKO(dt);
@@ -451,7 +451,8 @@ function onHit(isPunch, dmg = 6) {
   document.getElementById('nSlap').textContent = nSlap;
   document.getElementById('nPunch').textContent = nPunch;
   document.getElementById('nBest').textContent = best;
-  if (Math.random() < 0.45 || !bubble) bubble = { txt: pick(OUCH), life: 0.9, max: 0.9 };
+  // 被打當下，囂張台詞立刻換掉（不會一邊被打一邊說不痛不癢）
+  if (!bubble || bubble.kind === 'taunt' || Math.random() < 0.45) bubble = { txt: pick(OUCH), life: 0.9, max: 0.9 };
   if (navigator.vibrate) navigator.vibrate(isPunch ? 35 : 20);
   const hint = document.getElementById('hint'); if (hint) hint.style.opacity = 0;
   if (hp <= 0 && !ko) startKO();
