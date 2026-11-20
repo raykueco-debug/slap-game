@@ -1,0 +1,50 @@
+{
+ "_說明": "自動對位的人工修正（角色座標）：dx/dy＝前髮位移、bdx/bdy＝後髮位移（負＝往左/上）；fay/bay＝直接指定前/後髮錨點高度比例；long＝長髮（後髮不截掉下巴以下）",
+ "hair_m": {
+  "afro": {
+   "long": true
+  },
+  "medium": {
+   "long": true
+  },
+  "dreads": {
+   "long": true
+  },
+  "wolf": {
+   "long": true
+  },
+  "wavy": {
+   "long": true
+  },
+  "mohawk": {
+   "dy": -40
+  },
+  "manbun": {
+   "dy": -45
+  },
+  "balding": {
+   "dy": 40
+  }
+ },
+ "hair_f": {
+  "ponyhigh": {
+   "dx": 30,
+   "dy": -30
+  },
+  "bun": {
+   "dy": -45,
+   "bdy": -25
+  },
+  "wavylong": {
+   "dy": -25
+  },
+  "spacebuns": {
+   "fay": 0.45,
+   "bay": 0.5
+  },
+  "verylong": {
+   "dy": -18,
+   "bdy": -15
+  }
+ }
+}

@@ -8,12 +8,17 @@ let W, H, DPR, S, RX, RY;
 function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   W = innerWidth; H = innerHeight;
+  const panelH = window.AV_PANEL_OPEN ? innerHeight * 0.46 : 0;   // 造型面板打開時，角色縮到面板上方
   cv.width = W * DPR; cv.height = H * DPR;
-  const span = L.feet - L.top + 60;
-  S = Math.min(W / 430, H / span);
-  RX = W / 2; RY = H / 2 - ((L.top + L.feet) / 2) * S + 12;
+  const d = window.AVATAR ? AVATAR.dims() : { top: 0, bottom: 0 };
+  const top = L.top - d.top, feet = L.feet + d.bottom;
+  const span = feet - top + 60;
+  const avail = H - panelH;
+  S = Math.min(W / 430, avail / span);
+  RX = W / 2; RY = avail / 2 - ((top + feet) / 2) * S + 12 + (panelH ? 20 : 0);
 }
 addEventListener('resize', resize); resize();
+window.onAvatarChange = resize;
 
 // ---------- 圖片載入 ----------
 let IMG_SCALE = 1;
@@ -31,6 +36,7 @@ for (const k in (window.SPRITES || {})) {
   SP_IMG[k] = Object.assign({}, d, { im: im, ok: false }); im.onload = () => { SP_IMG[k].ok = true; }; im.src = d.img;
 }
 function armLength() { const p = P.armL; return p.ok ? partW(p) * p.im.naturalHeight / p.im.naturalWidth * 0.86 : 90; }
+if (window.AVATAR) AVATAR.attach(P);
 function partW(p) { return p.w != null ? p.w : p.im.naturalWidth * IMG_SCALE; }
 
 // ---------- 動態狀態 ----------
@@ -83,6 +89,7 @@ function update(dt) {
   A.torso.rot = sp.bodyRot.x * 0.4;
   for (const k of ['head', 'armL', 'armR']) { A[k].sx = 1 / A.torso.sx; A[k].sy = 1 / A.torso.sy; }
   // 頭：囂張的晃頭＋受擊彈簧
+  if (window.AVATAR) A.head.sx *= AVATAR.headW();
   A.head.rot = Math.sin(t * 1.1) * 0.035 + sp.headRot.x;
   A.head.dx = sp.headX.x;
   A.head.dy = bLag * 1.5 + sp.headY.x;
@@ -222,6 +229,7 @@ function drawPart(k) {
 }
 // 腫包＆暈眩星星：畫在前髮座標裡（pivot＝頭髮頂端），跟著頭一起動
 function drawBumpDizzy() {
+  if (window.AVATAR) { const o = AVATAR.headTopOffset(); ctx.translate(o[0], o[1]); }
   if (bumpT > 0) {
     const r = 30 * Math.min(1, (3 - bumpT) * 6) * (bumpT < 0.4 ? bumpT / 0.4 : 1);
     ctx.save(); ctx.translate(22, 14);
@@ -331,7 +339,8 @@ function render() {
   if (!spr) for (const key of order) {
     if (key === 'face' && hurt) continue;
     if (key === 'faceHurt' && !hurt) continue;
-    ctx.save(); applyChain(key); drawPart(key);
+    ctx.save(); applyChain(key);
+    if (!window.AVATAR || AVATAR.beforePart(key, ctx)) { drawPart(key); if (window.AVATAR) AVATAR.afterPart(key, ctx); }
     if (key === 'face' || key === 'faceHurt') { faceM = ctx.getTransform(); drawCheeks(); drawInjury(); }
     if (key === 'hairFront') drawBumpDizzy();
     if (EDIT) { ctx.fillStyle = key === sel ? '#f00' : '#0a0'; circ(0, 0, key === sel ? 7 : 4); ctx.fill(); }

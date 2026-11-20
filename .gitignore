@@ -1,2 +1,6 @@
 _chatgpt_draft_backup.txt
 __pycache__/
+sheets/
+previews/
+lib/**/*_raw.png
+lib/fix_widest_backup.json

@@ -54,8 +54,14 @@ def strip_sleeves(torso):
     """切掉衣服本身的袖子：只留身體寬度（以下襬那排的寬度為準），袖子交給手臂部件"""
     W, H = torso.size
     px = torso.load()
-    y = int(H * 0.9)
-    xs = [x for x in range(W) if px[x, y][3] > TH]
+    xs = []
+    for f in (0.9, 0.85, 0.8, 0.75, 0.7, 0.6):   # 下襬那排可能剛好是空的，往上找
+        y = int(H * f)
+        xs = [x for x in range(W) if px[x, y][3] > TH]
+        if xs:
+            break
+    if not xs:
+        return torso
     L, R = xs[0] - 2, xs[-1] + 2
     out = torso.copy()
     o = out.load()
