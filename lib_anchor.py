@@ -227,6 +227,15 @@ def main():
             if cat == 'acc':
                 e['scale'] = scales['acc']
     # 原圖瀏海最寬排在 head 座標：hair_front 放在 head (0,-232)、ay=0 → 最寬排 y = -232 + ref_f[0]*unit
+    # ---------- 分部位鬍子：每張表一個比例（一般八字鬍寬 ≈ 88 單位＝原嘴寬 1.3 倍）----------
+    bz = {}
+    for iid, e in man.get('beard', {}).items():
+        if iid.startswith('up_'):
+            bz.setdefault(e['sheet'], []).append(e['w'])
+    for iid, e in man.get('beard', {}).items():
+        ws = sorted(bz.get(e['sheet'], [e['w']]))
+        e['k'] = 88.0 / ws[len(ws) // 2]
+
     # ---------- 身體：上衣去袖＋拆前領層；整張表比例以原上衣（含袖）寬換算 ----------
     sys.path.insert(0, ROOT)
     from slice_grid import strip_sleeves, make_collar

@@ -6942,5 +6942,359 @@
     "file": "lib/body_m/muscle_collar.png"
    }
   }
+ },
+ "beard": {
+  "up_natural": {
+   "name": "一般八字",
+   "sheet": "BZ-1",
+   "file": "lib/beard/up_natural.png",
+   "w": 215,
+   "h": 85,
+   "cx": 4.875,
+   "top": 112.0,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "up_walrus": {
+   "name": "海象八字",
+   "sheet": "BZ-1",
+   "file": "lib/beard/up_walrus.png",
+   "w": 254,
+   "h": 114,
+   "cx": 2.125,
+   "top": 93.0,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "up_handlebar": {
+   "name": "翹八字",
+   "sheet": "BZ-1",
+   "file": "lib/beard/up_handlebar.png",
+   "w": 269,
+   "h": 88,
+   "cx": 0.375,
+   "top": 108.0,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "up_pencil": {
+   "name": "細線八字",
+   "sheet": "BZ-1",
+   "file": "lib/beard/up_pencil.png",
+   "w": 256,
+   "h": 39,
+   "cx": -3.375,
+   "top": 128.0,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "low_soul": {
+   "name": "下巴小鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/low_soul.png",
+   "w": 82,
+   "h": 71,
+   "cx": 6.375,
+   "top": 86.25,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "low_goatee": {
+   "name": "山羊鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/low_goatee.png",
+   "w": 113,
+   "h": 117,
+   "cx": 3.625,
+   "top": 85.25,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "low_full": {
+   "name": "整片下巴鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/low_full.png",
+   "w": 240,
+   "h": 155,
+   "cx": -0.125,
+   "top": 61.25,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "low_pointed": {
+   "name": "尖下巴鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/low_pointed.png",
+   "w": 141,
+   "h": 180,
+   "cx": 3.125,
+   "top": 60.25,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "side_chinstrap": {
+   "name": "鬢角連線",
+   "sheet": "BZ-1",
+   "file": "lib/beard/side_chinstrap.png",
+   "w": 240,
+   "h": 123,
+   "cx": 4.375,
+   "top": 51.5,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "side_short": {
+   "name": "短修鰓鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/side_short.png",
+   "w": 255,
+   "h": 136,
+   "cx": -0.375,
+   "top": 44.5,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "side_bushy": {
+   "name": "濃密鰓鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/side_bushy.png",
+   "w": 284,
+   "h": 170,
+   "cx": -0.125,
+   "top": 23.5,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "side_mutton": {
+   "name": "羊排鬢角",
+   "sheet": "BZ-1",
+   "file": "lib/beard/side_mutton.png",
+   "w": 272,
+   "h": 295,
+   "cx": 3.625,
+   "top": 9.5,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "under_short": {
+   "name": "短頷下鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/under_short.png",
+   "w": 235,
+   "h": 132,
+   "cx": 4.875,
+   "top": 21.75,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "under_round": {
+   "name": "圓蓬頷下鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/under_round.png",
+   "w": 260,
+   "h": 188,
+   "cx": 2.125,
+   "top": 7.75,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "under_long": {
+   "name": "長鬍到胸",
+   "sheet": "BZ-1",
+   "file": "lib/beard/under_long.png",
+   "w": 254,
+   "h": 313,
+   "cx": -1.125,
+   "top": -23.25,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "under_viking": {
+   "name": "維京辮鬍",
+   "sheet": "BZ-1",
+   "file": "lib/beard/under_viking.png",
+   "w": 236,
+   "h": 268,
+   "cx": -4.375,
+   "top": -22.25,
+   "cell": 315.25,
+   "k": 0.34375
+  },
+  "up_horseshoe": {
+   "name": "馬蹄八字",
+   "sheet": "BZ-2",
+   "file": "lib/beard/up_horseshoe.png",
+   "w": 271,
+   "h": 144,
+   "cx": 1.25,
+   "top": 80.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "up_fumanchu": {
+   "name": "長垂八字",
+   "sheet": "BZ-2",
+   "file": "lib/beard/up_fumanchu.png",
+   "w": 236,
+   "h": 260,
+   "cx": 1.25,
+   "top": 40.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "up_chevron": {
+   "name": "濃密八字",
+   "sheet": "BZ-2",
+   "file": "lib/beard/up_chevron.png",
+   "w": 283,
+   "h": 121,
+   "cx": 0.25,
+   "top": 88.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "up_stubble": {
+   "name": "唇上鬍渣",
+   "sheet": "BZ-2",
+   "file": "lib/beard/up_stubble.png",
+   "w": 238,
+   "h": 72,
+   "cx": 0.25,
+   "top": 121.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "low_stubble": {
+   "name": "下巴鬍渣",
+   "sheet": "BZ-2",
+   "file": "lib/beard/low_stubble.png",
+   "w": 178,
+   "h": 87,
+   "cx": 2.75,
+   "top": 111.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "low_boxed": {
+   "name": "方下巴鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/low_boxed.png",
+   "w": 208,
+   "h": 133,
+   "cx": 1.25,
+   "top": 95.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "low_anchor": {
+   "name": "錨形下巴鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/low_anchor.png",
+   "w": 222,
+   "h": 150,
+   "cx": 0.75,
+   "top": 84.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "low_ducktail": {
+   "name": "鴨尾下巴鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/low_ducktail.png",
+   "w": 202,
+   "h": 179,
+   "cx": 0.25,
+   "top": 79.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "side_stubble": {
+   "name": "鰓邊鬍渣",
+   "sheet": "BZ-2",
+   "file": "lib/beard/side_stubble.png",
+   "w": 261,
+   "h": 185,
+   "cx": 2.25,
+   "top": 17.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "side_heavystubble": {
+   "name": "鰓邊濃鬍渣",
+   "sheet": "BZ-2",
+   "file": "lib/beard/side_heavystubble.png",
+   "w": 265,
+   "h": 187,
+   "cx": 0.75,
+   "top": 14.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "side_sideburn": {
+   "name": "長鬢角",
+   "sheet": "BZ-2",
+   "file": "lib/beard/side_sideburn.png",
+   "w": 281,
+   "h": 204,
+   "cx": 0.25,
+   "top": 1.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "side_curly": {
+   "name": "捲鰓鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/side_curly.png",
+   "w": 273,
+   "h": 200,
+   "cx": 0.75,
+   "top": 2.0,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "under_neck": {
+   "name": "脖子鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/under_neck.png",
+   "w": 243,
+   "h": 156,
+   "cx": 2.25,
+   "top": 10.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "under_garibaldi": {
+   "name": "圓大頷下鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/under_garibaldi.png",
+   "w": 278,
+   "h": 235,
+   "cx": 0.25,
+   "top": -4.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "under_ducktail": {
+   "name": "尖頷下鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/under_ducktail.png",
+   "w": 259,
+   "h": 241,
+   "cx": 0.25,
+   "top": -8.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  },
+  "under_wizard": {
+   "name": "超長鬍",
+   "sheet": "BZ-2",
+   "file": "lib/beard/under_wizard.png",
+   "w": 264,
+   "h": 315,
+   "cx": -0.75,
+   "top": -25.5,
+   "cell": 316.5,
+   "k": 0.3247232472324723
+  }
  }
 }

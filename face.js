@@ -284,13 +284,14 @@ window.FACEMATCH = (() => {
       const wideF = wn ? wc / wn : 0;
       beardDbg = { chinF: +chinF.toFixed(2), lipF: +lipF.toFixed(2), jawF: +jawF.toFixed(2), longF: +longF.toFixed(2), wideF: +wideF.toFixed(2), cheekL: Math.round(cheekL) };
       if (gender === 'm') {
-        const C = chinF > 0.45, Lp = lipF > 0.6, J = jawF > 0.4;   // 上唇門檻較高：鼻子下方常有陰影
-        if (C && J && Lp) beard = longF > 0.55 ? 'b_wizard' : wideF > 0.5 ? 'b_bushy' : longF > 0.3 ? 'b_garibaldi' : 'b_full';
-        else if (C && J) beard = 'b_chinstrap';
-        else if (C && Lp) beard = 'b_boxed';
-        else if (C) beard = chinF > 0.6 ? 'b_goatee' : 'b_soul';
-        else if (lipF > 0.7) beard = 'b_mustache';
-        else if (chinF > 0.25 && jawF > 0.2) beard = 'b_stubble';
+        // 四個部位各自判斷（嘴巴永遠在唇上與唇下之間）
+        beard = {
+          beardUp: lipF > 0.7 ? 'up_natural' : lipF > 0.5 && chinF > 0.3 ? 'up_stubble' : null,
+          beardLow: chinF > 0.6 ? 'low_full' : chinF > 0.45 ? 'low_goatee' : chinF > 0.25 && jawF > 0.2 ? 'low_stubble' : null,
+          // 鰓邊：下顎常有陰影，要下巴或上唇也有鬍子才算
+          beardSide: !(chinF > 0.3 || lipF > 0.5) ? null : jawF > 0.6 ? (wideF > 0.5 ? 'side_bushy' : 'side_short') : jawF > 0.4 && chinF > 0.45 ? 'side_heavystubble' : chinF > 0.25 && jawF > 0.2 ? 'side_stubble' : null,
+          beardUnder: longF > 0.55 ? 'under_long' : longF > 0.3 ? 'under_round' : chinF > 0.6 && jawF > 0.4 ? 'under_short' : null,
+        };
       }
     }
 
@@ -303,7 +304,7 @@ window.FACEMATCH = (() => {
       hair: feat.bald ? 'bald' : nearest(HAIR_TAG[hairCat], feat, { fr: 3, len: 2, vol: 1.5, wid: 1, asym: 1, bald: 2 }),
       face: nearest(FACE_TAG[faceCat], ff, { ar: 30, tilt: 2, size: 2, uneven: 1, lips: .5 }),
       head: nearest(Object.fromEntries(Object.entries(HEAD_TAG).filter(([k]) => k.startsWith(g + '_'))), hf, { wr: 10, jaw: 6 }),
-      glasses, beard, prop,
+      glasses, prop, ...(beard || {}),
     };
     // 只挑造型庫裡真的有的
     const LIB = window.STYLE_LIB || {};

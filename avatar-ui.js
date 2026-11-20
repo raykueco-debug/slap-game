@@ -42,6 +42,7 @@
   // 各類選項
   const g = () => AV.get().gender;
   const none = { id: null, name: '無' };
+  const beardOf = pre => [none].concat(Object.entries(LIB.beard || {}).filter(([k]) => k.startsWith(pre)).map(([k, v]) => ({ id: k, name: v.name, img: v.file })));
   const accOf = pre => [none].concat(Object.entries(LIB.acc || {}).filter(([k]) => k.startsWith(pre)).map(([k, v]) => ({ id: k, name: v.name, img: v.file })));
   const CATS = [
     { key: 'hair', name: '髮型', list: () => (g() === 'm' ? [{ id: 'orig', name: '原本', img: 'parts/hair_front.png' }] : [])
@@ -56,7 +57,10 @@
     { key: 'body', name: '體型', list: () => (g() === 'm' ? [{ id: 'orig', name: '原本', img: 'parts/torso.png' }] : [])
         .concat(Object.entries(LIB['body_' + g()] || {}).map(([k, v]) => ({ id: k, name: v.name, img: v.torso && v.torso.file }))) },
     { key: 'glasses', name: '眼鏡', list: () => accOf('g_') },
-    { key: 'beard', name: '鬍子', list: () => accOf('b_') },
+    { key: 'beardUp', name: '唇上鬍', list: () => beardOf('up_') },
+    { key: 'beardLow', name: '唇下鬍', list: () => beardOf('low_') },
+    { key: 'beardSide', name: '鰓邊鬍', list: () => beardOf('side_') },
+    { key: 'beardUnder', name: '頷下鬍', list: () => beardOf('under_') },
     { key: 'hat', name: '頭飾', list: () => accOf('h_') },
     { key: 'ear', name: '耳環', list: () => accOf('e_') },
     { key: 'neck', name: '項鍊', list: () => accOf('n_') },
@@ -80,7 +84,7 @@
     const id = it.dataset.id === '' ? null : it.dataset.id;
     AV.set({ [curCat]: id }).then(drawGrid); drawGrid();
   });
-  const FDEF = { hair: 'longbangs', face: 'lashes', head: 'f_oval', body: 'std', beard: null };
+  const FDEF = { hair: 'longbangs', face: 'lashes', head: 'f_oval', body: 'std', beardUp: null, beardLow: null, beardSide: null, beardUnder: null };
   const MDEF = { hair: 'orig', face: 'orig', head: 'orig', body: 'orig' };
   panel.querySelectorAll('[data-g]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.g === g()) return;
@@ -95,7 +99,7 @@
     if (!f || !window.FACEMATCH) return;
     try {
       const { pick } = await FACEMATCH.analyze(f, g(), status);
-      await AV.set(Object.assign({ glasses: null, beard: null }, pick));
+      await AV.set(Object.assign({ glasses: null, beardUp: null, beardLow: null, beardSide: null, beardUnder: null }, pick));
       status('配對完成！不像的地方可以在下面自己換。');
       refresh();
     } catch (err) { status('⚠ ' + (err && err.message || err)); }

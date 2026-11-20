@@ -60,6 +60,16 @@ SHEETS = {
         ('b_circle', '圈鬍'), ('b_vandyke', '范戴克鬍'), ('b_anchor', '錨形鬍'), ('b_fumanchu', '長垂八字鬍'),
         ('b_horseshoe', '馬蹄八字鬍'), ('b_walrus', '海象鬍'), ('b_pencil', '細線鬍'), ('b_muttonchop', '羊排鬢角'),
         ('b_heavystubble', '濃鬍渣'), ('b_neck', '脖子鬍'), ('b_garibaldi', '圓大鬍'), ('b_ducktail', '鴨尾鬍')]],
+    'BZ-1': [('beard', i, n, None) for i, n in [
+        ('up_natural', '一般八字'), ('up_walrus', '海象八字'), ('up_handlebar', '翹八字'), ('up_pencil', '細線八字'),
+        ('low_soul', '下巴小鬍'), ('low_goatee', '山羊鬍'), ('low_full', '整片下巴鬍'), ('low_pointed', '尖下巴鬍'),
+        ('side_chinstrap', '鬢角連線'), ('side_short', '短修鰓鬍'), ('side_bushy', '濃密鰓鬍'), ('side_mutton', '羊排鬢角'),
+        ('under_short', '短頷下鬍'), ('under_round', '圓蓬頷下鬍'), ('under_long', '長鬍到胸'), ('under_viking', '維京辮鬍')]],
+    'BZ-2': [('beard', i, n, None) for i, n in [
+        ('up_horseshoe', '馬蹄八字'), ('up_fumanchu', '長垂八字'), ('up_chevron', '濃密八字'), ('up_stubble', '唇上鬍渣'),
+        ('low_stubble', '下巴鬍渣'), ('low_boxed', '方下巴鬍'), ('low_anchor', '錨形下巴鬍'), ('low_ducktail', '鴨尾下巴鬍'),
+        ('side_stubble', '鰓邊鬍渣'), ('side_heavystubble', '鰓邊濃鬍渣'), ('side_sideburn', '長鬢角'), ('side_curly', '捲鰓鬍'),
+        ('under_neck', '脖子鬍'), ('under_garibaldi', '圓大頷下鬍'), ('under_ducktail', '尖頷下鬍'), ('under_wizard', '超長鬍')]],
 }
 def body(cat, items):
     out = []

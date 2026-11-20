@@ -40,9 +40,11 @@ window.AVATAR = (() => {
     f_mole: { slot: 'mark', space: 'face', x: 38, y: 36, w: 10 }, f_freckles: { slot: 'mark', space: 'face', pair: 58, y: 22, w: 46 },
     f_scar: { slot: 'mark', space: 'face', x: -44, y: 20, w: 50 }, f_bandage: { slot: 'mark', space: 'face', x: 52, y: 26, w: 48 },
   };
-  const SLOTS = ['glasses', 'beard', 'hat', 'ear', 'neck', 'mark'];
+  const SLOTS = ['glasses', 'hat', 'ear', 'neck', 'mark'];
+  // 鬍子拆四個部位：唇上／唇下／鰓邊／頷下，各自定位，嘴巴永遠在唇上與唇下之間
+  const BEARD_SLOTS = ['beardUp', 'beardLow', 'beardSide', 'beardUnder'];
   const DEF = { prop: null, gender: 'm', head: 'orig', hair: 'orig', face: 'orig', body: 'orig', skin: 'orig', hairColor: 'black',
-                glasses: null, beard: null, hat: null, ear: null, neck: null, mark: null, faceW: 1 };
+                glasses: null, beardUp: null, beardLow: null, beardSide: null, beardUnder: null, hat: null, ear: null, neck: null, mark: null, faceW: 1 };
   const KEY = 'slap_avatar_v2';
   let cur = Object.assign({}, DEF);
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) Object.assign(cur, s); } catch (_) {}
@@ -233,6 +235,7 @@ window.AVATAR = (() => {
           const pcx = off + W0 / 2 + eb.cx, pcy = H0 / 2 + eb.cy;
           p.im = c; p.w = c.width * kk; p.ax = (pcx * kk - Txx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
           const eyeBottom = Ty + eb.h * kk / 2;                      // face 座標
+          p.eyeBottom = eyeBottom; p.eyeMid = Ty + eb.h * kk * 0.22;   // 眼睛中線略下（眉毛在眼睛區上方）
           p.x = G.cx; p.y = faceY;
           // 嘴巴：定稿嘴位；大小＝定稿嘴寬 ×（此款嘴/眼睛區 比上 定稿嘴/眼睛區，限 0.85~1.15）× 照片嘴大小
           p.mouth = null;
@@ -291,12 +294,16 @@ window.AVATAR = (() => {
       const id = cur[slot];
       if (id && LIB.acc && LIB.acc[id] && !accImgs[id]) jobs.push(loadImg(LIB.acc[id].file).then(im => () => { accImgs[id] = im; }));
     }
+    for (const slot of BEARD_SLOTS) {
+      const id = cur[slot];
+      if (id && LIB.beard && LIB.beard[id] && !accImgs[id]) jobs.push(loadImg(LIB.beard[id].file).then(im => () => { accImgs[id] = im; }));
+    }
     const done = await Promise.all(jobs);
     if (my !== version) return;
     done.forEach(f => f && f());
     if (window.onAvatarChange) window.onAvatarChange();
     // 鬍子跟髮色
-    for (const slot of ['beard']) { const id = cur[slot]; if (id && accImgs[id]) accImgs[id + '_c'] = recolorHair(accImgs[id], hc, true); }
+    for (const slot of BEARD_SLOTS) { const id = cur[slot]; if (id && accImgs[id]) accImgs[id + '_c'] = recolorHair(accImgs[id], hc, true); }
   }
   function attach(parts) {
     P = parts;
@@ -311,13 +318,43 @@ window.AVATAR = (() => {
 
   // ---------- 繪製掛勾（game.js 每個部件畫之前／之後呼叫） ----------
   // 鬍子：以嘴巴中心或下巴為基準（face 座標），寬度跟著五官縮放；畫在五官之下
+  // 鬍子四部位（face 座標，畫在五官之下）：同一張表同比例（k＝每 px 幾單位），跟著五官縮放
+  const BEARD_AY = { up_fumanchu: 0.22, up_horseshoe: 0.3 };      // 唇上：圖片哪個高度壓在嘴巴上緣（預設＝底部）
   function drawBeard(ctx, key) {
-    const id = cur.beard, bp = META.beardPos && META.beardPos[id], im = accImgs[id + '_c'] || accImgs[id];
-    if (!id || !bp || !im || !G) return;
-    const m = P[key].mouth || P.face.mouth;
-    const ref = bp.at === 'chin' ? [0, G.chin - P[key].y] : m ? [m.x, m.y] : [0, (META.face.smug.m.cy) * U * SF];
-    const w = bp.w * SF, h = w * (im.naturalHeight || im.height) / (im.naturalWidth || im.width);
-    ctx.drawImage(im, ref[0] - w / 2, ref[1] - bp.ay * h, w, h);
+    if (!G) return;
+    const m = P[key].mouth; if (!m) return;
+    const B = id => { const im = accImgs[id + '_c'] || accImgs[id], e = LIB.beard && LIB.beard[id]; return im && e ? { im, k: e.k * SF, W: im.naturalWidth || im.width, H: im.naturalHeight || im.height } : null; };
+    const mTop = m.y - m.h / 2, mBot = m.y + m.h / 2, chinL = G.chin - P[key].y;
+    // 頷下：頂部塞進下巴下面
+    let b = cur.beardUnder && B(cur.beardUnder);
+    if (b) { const w = b.W * b.k, h = b.H * b.k; ctx.drawImage(b.im, -w / 2 + (m.x * 0.3), chinL - h * 0.12, w, h); }
+    // 鰓邊：左右各半，外緣貼臉輪廓；從顴骨高度到下巴
+    b = cur.beardSide && B(cur.beardSide);
+    if (b) {
+      const yTop = (cur.beardSide === 'side_sideburn' || cur.beardSide === 'side_mutton') ? mTop - (chinL - mTop) * 1.6 : mTop - (chinL - mTop) * 0.9;
+      const yBot = chinL + 4 * SF, hh = yBot - yTop, half = b.W / 2;
+      const ymid = yTop + hh * 0.45;
+      const [L, R] = faceSpan(P[key].y + ymid, P[key].y + ymid);
+      const sc = hh / b.H, w = half * sc;
+      const xl = L - P[key].x, xr = R - P[key].x;
+      ctx.drawImage(b.im, 0, 0, half, b.H, xl - w * 0.12, yTop, w, hh);
+      ctx.drawImage(b.im, half, 0, half, b.H, xr - w * 0.88, yTop, w, hh);
+    }
+    // 唇下：頂部接嘴巴下緣
+    b = cur.beardLow && B(cur.beardLow);
+    if (b) { const w = b.W * b.k, h = b.H * b.k; ctx.drawImage(b.im, m.x - w / 2, mBot - h * 0.06, w, h); }
+    // 唇上：底部壓嘴巴上緣
+    b = cur.beardUp && B(cur.beardUp);
+    if (b) {
+      // 唇上空間＝眼睛下緣到嘴巴上緣；放不下先壓扁高度（最多到 60%），還不夠再整體縮小
+      let w = b.W * b.k, h = b.H * b.k;
+      const ay = BEARD_AY[cur.beardUp] == null ? 0.92 : BEARD_AY[cur.beardUp];
+      // 八字鬍底部壓進嘴巴上緣 35%（嘴巴畫在鬍子上面）；頂部不超過眼睛中線略下
+      const base = mTop + m.h * 0.35;
+      const room = Math.max(6, base - (P[key].eyeMid == null ? base - 30 : P[key].eyeMid));
+      if (ay * h > room) { const sq = Math.max(0.6, room / (ay * h)); h *= sq; if (ay * h > room) { const f = room / (ay * h); h *= f; w *= f; } }
+      ctx.drawImage(b.im, m.x - w / 2, base - ay * h, w, h);
+    }
   }
   function drawAcc(ctx, id, under) {
     const pos = ACC_POS[id], im = accImgs[id + '_c'] || accImgs[id];
