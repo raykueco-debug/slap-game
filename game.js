@@ -49,10 +49,11 @@ let cover = null;
 // 傷勢：第一次被打後不再囂張；巴掌印、腫包、熊貓眼一直留到 KO 回血
 let beenHit = false, faceM = null;
 const bumps = [];                 // 臉上腫包 { x, y, r }（face 座標）
-const eyeDmg = { L: 0, R: 0 };    // 熊貓眼等級 0~3
+const eyeDmg = { L: 0, R: 0 };
+const cheek = { L: 0, R: 0 };    // 臉頰紅腫等級 0~4（巴掌）    // 熊貓眼等級 0~3
 const EYE = { L: [-48, -12], R: [48, -12] };
 const HURT_TAUNTS = ['還、還沒完呢…', '你給我記住…', '才、才不痛咧！', '嗚…哼！', '有種再來啊…（發抖）'];
-function resetDamage() { beenHit = false; bumps.length = 0; marks.length = 0; eyeDmg.L = eyeDmg.R = 0; } // { x, y, t, max, arms: ['armL','armR'] }
+function resetDamage() { beenHit = false; bumps.length = 0; marks.length = 0; eyeDmg.L = eyeDmg.R = 0; cheek.L = cheek.R = 0; } // { x, y, t, max, arms: ['armL','armR'] }
 // HP 與 KO 流程：fly（被揍飛）→ twinkle（飛到天邊閃一下）→ fall（掉回地上）→ beg（哭著磕頭認錯）→ rise（站起來回滿血）
 const MAX_HP = 100;
 let hp = MAX_HP, hpShow = MAX_HP;
@@ -228,6 +229,21 @@ function drawBumpDizzy() {
     ctx.restore();
   }
 }
+// 臉頰紅腫：只在臉頰範圍內，越打越紅越鼓
+function drawCheeks() {
+  for (const side of ['L', 'R']) {
+    const n = cheek[side]; if (!n) continue;
+    const sx = side === 'L' ? -1 : 1, cx = sx * (56 + n), cy = 26, rx = 18 + 2.5 * n, ry = 13 + 2 * n;
+    const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, rx);
+    g.addColorStop(0, `rgba(235,60,60,${0.35 + 0.1 * n})`); g.addColorStop(0.7, `rgba(240,90,90,${0.25 + 0.08 * n})`); g.addColorStop(1, 'rgba(240,90,90,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+    if (n >= 2) { // 鼓起來的輪廓
+      ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(150,50,40,.7)';
+      ctx.beginPath(); ctx.ellipse(cx, cy, rx * 0.8, ry * 0.8, 0, sx > 0 ? -0.9 : Math.PI - 0.6, sx > 0 ? 0.6 : Math.PI + 0.9); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.ellipse(cx - sx * 4, cy - ry * 0.45, rx * 0.25, ry * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
 function addBump(x, y, r) {
   const b = bumps.find(b => Math.hypot(b.x - x, b.y - y) < 22);
   if (b) b.r = Math.min(30, b.r + 5); else { bumps.push({ x, y, r }); if (bumps.length > 8) bumps.shift(); }
@@ -308,7 +324,7 @@ function render() {
     if (key === 'face' && hurt) continue;
     if (key === 'faceHurt' && !hurt) continue;
     ctx.save(); applyChain(key); drawPart(key);
-    if (key === 'face' || key === 'faceHurt') { faceM = ctx.getTransform(); drawInjury(); drawMarks(); }
+    if (key === 'face' || key === 'faceHurt') { faceM = ctx.getTransform(); drawCheeks(); drawInjury(); }
     if (key === 'hairFront') drawBumpDizzy();
     if (EDIT) { ctx.fillStyle = key === sel ? '#f00' : '#0a0'; circ(0, 0, key === sel ? 7 : 4); ctx.fill(); }
     ctx.restore();
@@ -440,8 +456,7 @@ function slap(dir, v) {
   sp.headRot.v += dir * 6 * f; sp.headX.v += dir * 150 * f;
   sp.bodyRot.v += dir * 1.8 * f; sp.bodyX.v += dir * 110 * f;
   sp.arm.v += 2.5 * f; sp.hair.v += 3 * f;
-  marks.push({ x: -dir * rand(50, 64), y: rand(12, 26), rot: -dir * 0.3 + rand(-0.2, 0.2), life: Infinity });
-  addBump(-dir * 60, 24, 6);
+  const cs = dir > 0 ? 'L' : 'R'; cheek[cs] = Math.min(4, cheek[cs] + 1);
   if (marks.length > 8) marks.shift();
   onHit(false, 4 + f * 2); shake(8 * f); sfxSlap(f);
   const h = headScreen();
