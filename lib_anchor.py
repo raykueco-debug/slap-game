@@ -93,7 +93,22 @@ def split_mouth(im):
                 mp[x, y] = px[x, y]; ep[x, y] = (0, 0, 0, 0)
     bb = mo.getchannel('A').getbbox()
     info = {'cx': (bb[0] + bb[2]) / 2 - W / 2, 'cy': (bb[1] + bb[3]) / 2 - H / 2, 'w': bb[2] - bb[0]}
+    eb = eyes.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox()
+    info['eyes'] = {'cx': (eb[0] + eb[2]) / 2 - W / 2, 'cy': (eb[1] + eb[3]) / 2 - H / 2, 'w': eb[2] - eb[0], 'h': eb[3] - eb[1], 'W': W, 'H': H}
     return eyes, mo.crop(bb), info
+
+
+def hairline(im, axr=0.5):
+    """前髮在中線附近的髮際線（圖片高度比例）：中間 10% 寬的每一欄，從上往下穿過頭髮後第一個透明處，取中位數"""
+    al = im.getchannel('A').load(); W, H = im.size
+    ys = []
+    for x in range(int(W * (axr - 0.05)), int(W * (axr + 0.05)) + 1):
+        y = 0
+        while y < H and al[x, y] <= TH: y += 1           # 跳過上方透明
+        while y < H and al[x, y] > TH: y += 1            # 穿過頭髮
+        ys.append(y)
+    ys.sort()
+    return ys[len(ys) // 2] / H
 
 
 def head_geo(im):
@@ -168,6 +183,8 @@ def main():
                 im = Image.open(os.path.join(ROOT, info['file']))
                 cy, cx, _r = fit_anchor(im)
                 info['scale'] = sheet_scale.get(e['sheet'], scales[cat])
+                if layer == 'front':
+                    info['hairline'] = hairline(im)
                 info['ay'] = cy / im.height
                 info['ax'] = cx / im.width
                 fx = fix.get(cat, {}).get(iid, {})
@@ -185,6 +202,7 @@ def main():
                         ef, mf = f.replace('.png', '_eyes.png'), f.replace('.png', '_mouth.png')
                         sp[0].save(os.path.join(ROOT, ef)); sp[1].save(os.path.join(ROOT, mf))
                         e[layer]['eyes'] = ef
+                        e[layer]['eyebox'] = sp[2].pop('eyes')
                         e[layer]['mouth'] = dict(sp[2], file=mf, mw=sp[1].width, mh=sp[1].height)
                     else:
                         e[layer].pop('eyes', None); e[layer].pop('mouth', None)
@@ -232,10 +250,16 @@ def main():
     print('身體比例', {k: round(v, 3) for k, v in body_sheet_scale.items()})
 
     json.dump(man, open(man_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    # 原臉也拆成眼睛＋嘴巴（之後五官比例調整對原臉也有效）
+    orig_faces = {}
+    for layer, fn in (('smug', 'face_smug'), ('hurt', 'face_hurt')):
+        eyes, mo, info = split_mouth(Image.open(f'{P}/{fn}.png').convert('RGBA'))
+        eyes.save(f'{P}/{fn}_eyes.png'); mo.save(f'{P}/{fn}_mouth.png')
+        orig_faces[layer] = {'eyes': f'parts/{fn}_eyes.png', 'mouth': f'parts/{fn}_mouth.png', 'eyebox': info.pop('eyes'), 'm': info}
     meta = {'refFront': ref_f[0] / o_hf.height, 'refBack': ref_b[0] / o_hb.height,
             'headSky': hcy / o_head.height, 'headW': o_head.width, 'headH': o_head.height,
-            'headGeo': head_geo(o_head),
-            'mouth': {'smug': split_mouth(o_face.convert('RGBA'))[2], 'hurt': split_mouth(Image.open(f'{P}/face_hurt.png').convert('RGBA'))[2]}}
+            'headGeo': head_geo(o_head), 'hairlineFront': hairline(o_hf),
+            'face': orig_faces}
     with open(os.path.join(ROOT, 'lib', 'manifest.js'), 'w', encoding='utf-8') as f:
         f.write('window.STYLE_LIB = ' + json.dumps(man, ensure_ascii=False) + ';\n')
         f.write('window.STYLE_META = ' + json.dumps(meta) + ';\n')

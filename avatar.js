@@ -45,7 +45,7 @@ window.AVATAR = (() => {
     f_scar: { slot: 'mark', space: 'face', x: -44, y: 20, w: 50 }, f_bandage: { slot: 'mark', space: 'face', x: 52, y: 26, w: 48 },
   };
   const SLOTS = ['glasses', 'beard', 'hat', 'ear', 'neck', 'mark'];
-  const DEF = { gender: 'm', head: 'orig', hair: 'orig', face: 'orig', body: 'orig', skin: 'orig', hairColor: 'black',
+  const DEF = { prop: null, gender: 'm', head: 'orig', hair: 'orig', face: 'orig', body: 'orig', skin: 'orig', hairColor: 'black',
                 glasses: null, beard: null, hat: null, ear: null, neck: null, mark: null, faceW: 1 };
   const KEY = 'slap_avatar_v2';
   let cur = Object.assign({}, DEF);
@@ -148,12 +148,13 @@ window.AVATAR = (() => {
     // 髮型（原圖 or 造型庫）
     jobs.push((async () => {
       const e = cur.hair !== 'orig' && cur.hair !== 'bald' && LIB[hairCat()] && LIB[hairCat()][cur.hair];
-      if (cur.hair === 'bald') return () => { P.hairFront.hidden = P.hairBack.hidden = true; };
+      if (cur.hair === 'bald') return () => { P.hairFront.hidden = P.hairBack.hidden = true; P.hairFront.hairline = null; };
       if (!e) {
         const [f, b] = [ORIG.hairFront.im, ORIG.hairBack.im];
         return () => { restore('hairFront'); restore('hairBack'); P.hairFront.hidden = P.hairBack.hidden = false;
           if (cur.hairColor !== 'black') { P.hairFront.im = recolorHair(f, hc, false); P.hairBack.im = recolorHair(b, hc, false); }
-          for (const k of ['hairFront', 'hairBack']) { const p = P[k]; p.w = ORIG[k].im.naturalWidth * U * SH; p.x = G.cx; p.y = mapY(ORIG[k].y); } };
+          for (const k of ['hairFront', 'hairBack']) { const p = P[k]; p.w = ORIG[k].im.naturalWidth * U * SH; p.x = G.cx; p.y = mapY(ORIG[k].y); }
+          P.hairFront.hairline = META.hairlineFront; };
       }
       const fi = e.front ? await loadImg(e.front.file) : null, bi = e.back ? await loadImg(e.back.file) : null;
       return () => {
@@ -166,28 +167,59 @@ window.AVATAR = (() => {
           p.ax = info.ax; p.ay = info.ay; p.x = G.cx + (info.dx || 0) * SH; p.y = mapY(ay0 + (info.dy || 0));
         }
         P.hairBack.long = !!e.long;
+        P.hairFront.hairline = e.front ? e.front.hairline : null;
       };
     })());
-    // 五官
+    // 五官：一律拆成「眼睛眉毛」＋「嘴巴」；眼睛區對齊定稿的眼睛區（寬度、中心），嘴巴放定稿嘴位
+    //       再套照片比例（prop：眼睛高低／眼距／眼睛大小／嘴高低／嘴大小）
     jobs.push((async () => {
       const e = cur.face !== 'orig' && LIB[faceCat()] && LIB[faceCat()][cur.face];
-      if (!e) return () => { for (const k of ['face', 'faceHurt']) { restore(k); P[k].mouth = null; P[k].w = ORIG[k].im.naturalWidth * U * SF; P[k].x = G.cx; P[k].y = faceY; } };
-      // 眼睛眉毛與嘴巴分開：眼睛照原本頂端對齊；嘴巴放到原臉嘴巴的位置、寬度貼近原臉
-      const L = l => l.eyes || l.file;
-      const [si, hi, sm, hm] = await Promise.all([loadImg(L(e.smug)), loadImg(L(e.hurt)),
-        e.smug.mouth ? loadImg(e.smug.mouth.file) : null, e.hurt.mouth ? loadImg(e.hurt.mouth.file) : null]);
+      const F = META.face, pr = Object.assign({ eyeDy: 0, eyeGap: 0, eyeScale: 1, mouthDy: 0, mouthScale: 1 }, cur.prop || {});
+      const srcOf = layer => e ? { eyes: e[layer].eyes || e[layer].file, eb: e[layer].eyebox, mouth: e[layer].mouth }
+                               : { eyes: F[layer].eyes, eb: F[layer].eyebox, mouth: Object.assign({ file: F[layer].mouth }, F[layer].m) };
+      const S = { smug: srcOf('smug'), hurt: srcOf('hurt') };
+      const ims = {};
+      for (const l of ['smug', 'hurt']) {
+        ims[l] = await loadImg(S[l].eyes);
+        ims[l + 'M'] = S[l].mouth && S[l].mouth.file ? await loadImg(S[l].mouth.file) : null;
+      }
       return () => {
-        for (const [k, im, info, mim, ref] of [['face', si, e.smug, sm, META.mouth && META.mouth.smug], ['faceHurt', hi, e.hurt, hm, META.mouth && META.mouth.hurt]]) {
-          P[k].mouth = null;
-          if (mim && ref) {
-            const ow = ref.w * U, w0 = info.mouth.w * info.scale * U;
-            const w = ow * Math.max(0.85, Math.min(1.15, w0 / ow));
-            P[k].mouth = { im: mim, w: w * SF, h: w * SF * mim.naturalHeight / mim.naturalWidth, x: ref.cx * U * SF, y: ref.cy * U * SF };
+        const HL = G.chin - G.top;                                  // 頭長（頭頂→下巴）
+        // 髮際線（head 座標）：前髮中線最低處；光頭＝頭頂往下一點
+        const hf = P.hairFront;
+        let yH = G.top + 0.12 * HL;
+        if (!hf.hidden && hf.hairline != null && hf.im) { const h = hf.w * hf.im.naturalHeight / hf.im.naturalWidth; yH = hf.y + (hf.hairline - hf.ay) * h; }
+        const fore = pr.forehead == null ? 0.2 : pr.forehead;      // 額頭佔「髮際線→下巴」的比例（照片量的，沒有就用預設）
+        for (const [k, l] of [['face', 'smug'], ['faceHurt', 'hurt']]) {
+          const ref = F[l], s = S[l], eb = s.eb, im = ims[l], p = P[k];
+          // 目標眼睛區（face 座標）
+          // 定稿位置（face 座標）：眉頂、嘴中心
+          const ebH = ref.eyebox.h * U * SF, ebTop0 = ref.eyebox.cy * U * SF - ebH / 2, my0 = ref.m.cy * U * SF;
+          // 露額頭時：眉頂移到「髮際線＋額頭」，五官整組放大去填滿到嘴（最多 1.3 倍）；有瀏海就維持定稿
+          const yHl = yH - faceY, chinL = G.chin - faceY;
+          const ebTop = Math.min(ebTop0, yHl + fore * (chinL - yHl));
+          const sv = Math.max(1, Math.min(1.3, (my0 - ebTop) / (my0 - ebTop0)));
+          const Tw = ref.eyebox.w * U * SF * sv * pr.eyeScale, Tx = ref.eyebox.cx * U * SF;
+          const Ty = ebTop + ebH * sv / 2 + pr.eyeDy * HL;
+          const kk = Tw / eb.w;
+          // 眼距：以眼睛區中線把圖切兩半，左右各往外（或往內）移
+          const g = Math.round(pr.eyeGap * eb.w * 0.5), W0 = im.naturalWidth, H0 = im.naturalHeight, off = Math.max(0, g);
+          const c = document.createElement('canvas'); c.width = W0 + 2 * off; c.height = H0;
+          const cx = c.getContext('2d'), xs = Math.round(W0 / 2 + eb.cx);
+          cx.drawImage(im, 0, 0, xs, H0, off - g, 0, xs, H0);
+          cx.drawImage(im, xs, 0, W0 - xs, H0, off + g + xs, 0, W0 - xs, H0);
+          c.naturalWidth = c.width; c.naturalHeight = c.height;
+          const pcx = off + W0 / 2 + eb.cx, pcy = H0 / 2 + eb.cy;
+          p.im = c; p.w = c.width * kk; p.ax = (pcx * kk - Tx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
+          p.x = G.cx; p.y = faceY;
+          // 嘴巴：定稿嘴位；大小＝定稿嘴寬 ×（此款嘴/眼睛區 比上 定稿嘴/眼睛區，限 0.85~1.15）× 照片嘴大小
+          p.mouth = null;
+          const mim = ims[l + 'M'];
+          if (mim && s.mouth) {
+            const rel = (s.mouth.w / eb.w) / (ref.m.w / ref.eyebox.w);
+            const w = ref.m.w * U * SF * Math.max(0.85, Math.min(1.15, rel)) * pr.mouthScale * (1 + (sv - 1) * 0.5);
+            p.mouth = { im: mim, w, h: w * mim.naturalHeight / mim.naturalWidth, x: ref.m.cx * U * SF, y: ref.m.cy * U * SF + pr.mouthDy * HL };
           }
-          // 眉毛（圖頂）對齊原臉的眉毛：原臉圖頂在支點上方 原高/2
-          const p = P[k]; p.im = toCanvas(im); p.w = info.w * info.scale * U * SF; p.ax = 0.5; p.x = G.cx; p.y = faceY;
-          const h = p.w * im.naturalHeight / im.naturalWidth, oTop = ORIG[k].ay * ORIG[k].im.naturalHeight * U * SF;
-          p.ay = oTop / h;
         }
       };
     })());

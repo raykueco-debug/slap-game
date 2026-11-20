@@ -14,7 +14,8 @@
     "ay": 0.5558416616429163,
     "ax": 0.5085523885770584,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.7182539682539683
    },
    "back": {
     "file": "lib/hair_m/bangs_back.png",
@@ -45,7 +46,8 @@
     "ay": 0.5340100809645858,
     "ax": 0.5079825013366154,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.684
    },
    "back": {
     "file": "lib/hair_m/crop_back.png",
@@ -76,7 +78,8 @@
     "ay": 0.5575029291311395,
     "ax": 0.49763011854099676,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5622489959839357
    },
    "back": {
     "file": "lib/hair_m/side_back.png",
@@ -107,7 +110,8 @@
     "ay": 0.5928486474133062,
     "ax": 0.5072946782125175,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.47560975609756095
    },
    "back": {
     "file": "lib/hair_m/middle_back.png",
@@ -138,7 +142,8 @@
     "ay": 0.5761859529296136,
     "ax": 0.503652553542184,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.7576923076923077
    },
    "back": {
     "file": "lib/hair_m/spiky_back.png",
@@ -169,7 +174,8 @@
     "ay": 0.7147881247755077,
     "ax": 0.5020998793021835,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.47619047619047616
    },
    "back": {
     "file": "lib/hair_m/buzz_back.png",
@@ -200,7 +206,8 @@
     "ay": 0.5671677910005343,
     "ax": 0.49653253565862593,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.7951807228915663
    },
    "back": {
     "file": "lib/hair_m/curly_back.png",
@@ -231,7 +238,8 @@
     "ay": 0.6131560087705654,
     "ax": 0.5078146440870157,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5427350427350427
    },
    "back": {
     "file": "lib/hair_m/slick_back.png",
@@ -262,7 +270,8 @@
     "ay": 0.6597025072423853,
     "ax": 0.5045660733710544,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.48660714285714285
    },
    "back": {
     "file": "lib/hair_m/comma_back.png",
@@ -293,7 +302,8 @@
     "ay": 0.5923323501019688,
     "ax": 0.5069282558372964,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5739130434782609
    },
    "back": {
     "file": "lib/hair_m/undercut_back.png",
@@ -324,7 +334,8 @@
     "ay": 0.42429066370224205,
     "ax": 0.529720725172305,
     "dy": -40,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6862745098039216
    },
    "back": {
     "file": "lib/hair_m/mohawk_back.png",
@@ -355,7 +366,8 @@
     "ay": 0.27478754492174856,
     "ax": 0.503984280610141,
     "dy": -45,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6129032258064516
    },
    "back": {
     "file": "lib/hair_m/manbun_back.png",
@@ -386,7 +398,8 @@
     "ay": 0.5045467392652871,
     "ax": 0.5048453383713069,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.35507246376811596
    },
    "back": {
     "file": "lib/hair_m/medium_back.png",
@@ -417,7 +430,8 @@
     "ay": 0.628446703871791,
     "ax": 0.5026221865557149,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5924528301886792
    },
    "back": {
     "file": "lib/hair_m/afro_back.png",
@@ -448,7 +462,8 @@
     "ay": 0.48478563728587365,
     "ax": 0.5069762917447325,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.39568345323741005
    },
    "back": {
     "file": "lib/hair_m/dreads_back.png",
@@ -479,7 +494,8 @@
     "ay": 0.9927155638846831,
     "ax": 0.49683881903180616,
     "dy": 40,
-    "dx": 0
+    "dx": 0,
+    "hairline": 1.0
    },
    "back": {
     "file": "lib/hair_m/balding_back.png",
@@ -510,7 +526,8 @@
     "ay": 0.5173804177048289,
     "ax": 0.5167499265630231,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.651685393258427
    },
    "back": {
     "file": "lib/hair_m/business_back.png",
@@ -541,7 +558,8 @@
     "ay": 0.45157974204413437,
     "ax": 0.5296886079804721,
     "dy": -22,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6171003717472119
    },
    "back": {
     "file": "lib/hair_m/pompadour_back.png",
@@ -572,7 +590,8 @@
     "ay": 0.5581523773395646,
     "ax": 0.5041982706626171,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.74609375
    },
    "back": {
     "file": "lib/hair_m/bowl_back.png",
@@ -603,7 +622,8 @@
     "ay": 0.5120754764041919,
     "ax": 0.5053276379105319,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.4631578947368421
    },
    "back": {
     "file": "lib/hair_m/wolf_back.png",
@@ -634,7 +654,8 @@
     "ay": 0.5073819396534868,
     "ax": 0.5016255685780974,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.4674329501915709
    },
    "back": {
     "file": "lib/hair_m/wavy_back.png",
@@ -665,7 +686,8 @@
     "ay": 0.5794301523321935,
     "ax": 0.4996302245568189,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.45217391304347826
    },
    "back": {
     "file": "lib/hair_m/cornrow_back.png",
@@ -696,7 +718,8 @@
     "ay": 0.6229210387614014,
     "ax": 0.5013922940573403,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5702127659574469
    },
    "back": {
     "file": "lib/hair_m/fade_back.png",
@@ -727,7 +750,8 @@
     "ay": 0.5738695278877611,
     "ax": 0.48256239585869026,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5827067669172933
    },
    "back": {
     "file": "lib/hair_m/perm_back.png",
@@ -765,6 +789,14 @@
      "file": "lib/face_m/narrow_smug_mouth.png",
      "mw": 100,
      "mh": 47
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -27.5,
+     "w": 242,
+     "h": 101,
+     "W": 242,
+     "H": 156
     }
    },
    "hurt": {
@@ -783,6 +815,14 @@
      "file": "lib/face_m/narrow_hurt_mouth.png",
      "mw": 119,
      "mh": 52
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -17.5,
+     "w": 240,
+     "h": 129,
+     "W": 241,
+     "H": 166
     }
    }
   },
@@ -805,6 +845,14 @@
      "file": "lib/face_m/round_smug_mouth.png",
      "mw": 98,
      "mh": 46
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -23.0,
+     "w": 232,
+     "h": 117,
+     "W": 233,
+     "H": 165
     }
    },
    "hurt": {
@@ -823,6 +871,14 @@
      "file": "lib/face_m/round_hurt_mouth.png",
      "mw": 127,
      "mh": 57
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -20.0,
+     "w": 241,
+     "h": 136,
+     "W": 243,
+     "H": 176
     }
    }
   },
@@ -845,6 +901,14 @@
      "file": "lib/face_m/droopy_smug_mouth.png",
      "mw": 97,
      "mh": 45
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -23.5,
+     "w": 252,
+     "h": 98,
+     "W": 253,
+     "H": 147
     }
    },
    "hurt": {
@@ -863,6 +927,14 @@
      "file": "lib/face_m/droopy_hurt_mouth.png",
      "mw": 126,
      "mh": 55
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -20.5,
+     "w": 239,
+     "h": 128,
+     "W": 241,
+     "H": 169
     }
    }
   },
@@ -885,6 +957,14 @@
      "file": "lib/face_m/sharp_smug_mouth.png",
      "mw": 97,
      "mh": 50
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -28.0,
+     "w": 272,
+     "h": 112,
+     "W": 274,
+     "H": 170
     }
    },
    "hurt": {
@@ -903,6 +983,14 @@
      "file": "lib/face_m/sharp_hurt_mouth.png",
      "mw": 133,
      "mh": 55
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -21.0,
+     "w": 245,
+     "h": 124,
+     "W": 245,
+     "H": 168
     }
    }
   },
@@ -925,6 +1013,14 @@
      "file": "lib/face_m/squint_smug_mouth.png",
      "mw": 102,
      "mh": 48
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -32.0,
+     "w": 247,
+     "h": 77,
+     "W": 248,
+     "H": 141
     }
    },
    "hurt": {
@@ -943,6 +1039,14 @@
      "file": "lib/face_m/squint_hurt_mouth.png",
      "mw": 131,
      "mh": 51
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -19.5,
+     "w": 237,
+     "h": 137,
+     "W": 238,
+     "H": 176
     }
    }
   },
@@ -965,6 +1069,14 @@
      "file": "lib/face_m/monolid_smug_mouth.png",
      "mw": 96,
      "mh": 46
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -26.5,
+     "w": 243,
+     "h": 95,
+     "W": 245,
+     "H": 150
     }
    },
    "hurt": {
@@ -983,6 +1095,14 @@
      "file": "lib/face_m/monolid_hurt_mouth.png",
      "mw": 129,
      "mh": 57
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -19.5,
+     "w": 246,
+     "h": 132,
+     "W": 247,
+     "H": 173
     }
    }
   },
@@ -1005,6 +1125,14 @@
      "file": "lib/face_m/bold_smug_mouth.png",
      "mw": 98,
      "mh": 45
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -22.0,
+     "w": 246,
+     "h": 127,
+     "W": 247,
+     "H": 173
     }
    },
    "hurt": {
@@ -1023,6 +1151,14 @@
      "file": "lib/face_m/bold_hurt_mouth.png",
      "mw": 126,
      "mh": 54
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -19.5,
+     "w": 240,
+     "h": 138,
+     "W": 241,
+     "H": 179
     }
    }
   },
@@ -1045,6 +1181,14 @@
      "file": "lib/face_m/sanpaku_smug_mouth.png",
      "mw": 97,
      "mh": 49
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -25.0,
+     "w": 249,
+     "h": 122,
+     "W": 250,
+     "H": 174
     }
    },
    "hurt": {
@@ -1063,6 +1207,14 @@
      "file": "lib/face_m/sanpaku_hurt_mouth.png",
      "mw": 131,
      "mh": 56
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -19.0,
+     "w": 257,
+     "h": 138,
+     "W": 258,
+     "H": 178
     }
    }
   },
@@ -1085,6 +1237,14 @@
      "file": "lib/face_m/dot_smug_mouth.png",
      "mw": 111,
      "mh": 60
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -36.0,
+     "w": 247,
+     "h": 107,
+     "W": 247,
+     "H": 181
     }
    },
    "hurt": {
@@ -1103,6 +1263,14 @@
      "file": "lib/face_m/dot_hurt_mouth.png",
      "mw": 131,
      "mh": 59
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -22.5,
+     "w": 253,
+     "h": 131,
+     "W": 255,
+     "H": 176
     }
    }
   },
@@ -1125,6 +1293,14 @@
      "file": "lib/face_m/deadfish_smug_mouth.png",
      "mw": 103,
      "mh": 59
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -28.5,
+     "w": 264,
+     "h": 124,
+     "W": 265,
+     "H": 183
     }
    },
    "hurt": {
@@ -1143,6 +1319,14 @@
      "file": "lib/face_m/deadfish_hurt_mouth.png",
      "mw": 139,
      "mh": 58
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -21.0,
+     "w": 258,
+     "h": 129,
+     "W": 259,
+     "H": 173
     }
    }
   },
@@ -1165,6 +1349,14 @@
      "file": "lib/face_m/uneven_smug_mouth.png",
      "mw": 102,
      "mh": 54
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -28.5,
+     "w": 248,
+     "h": 127,
+     "W": 250,
+     "H": 186
     }
    },
    "hurt": {
@@ -1183,6 +1375,14 @@
      "file": "lib/face_m/uneven_hurt_mouth.png",
      "mw": 136,
      "mh": 65
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -21.5,
+     "w": 254,
+     "h": 140,
+     "W": 255,
+     "H": 185
     }
    }
   },
@@ -1205,6 +1405,14 @@
      "file": "lib/face_m/hawk_smug_mouth.png",
      "mw": 107,
      "mh": 59
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -33.0,
+     "w": 251,
+     "h": 103,
+     "W": 252,
+     "H": 169
     }
    },
    "hurt": {
@@ -1223,6 +1431,14 @@
      "file": "lib/face_m/hawk_hurt_mouth.png",
      "mw": 150,
      "mh": 68
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -24.5,
+     "w": 258,
+     "h": 133,
+     "W": 259,
+     "H": 182
     }
    }
   },
@@ -1245,6 +1461,14 @@
      "file": "lib/face_m/double_smug_mouth.png",
      "mw": 102,
      "mh": 56
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -28.5,
+     "w": 250,
+     "h": 143,
+     "W": 250,
+     "H": 202
     }
    },
    "hurt": {
@@ -1263,6 +1487,14 @@
      "file": "lib/face_m/double_hurt_mouth.png",
      "mw": 138,
      "mh": 62
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -24.5,
+     "w": 252,
+     "h": 154,
+     "W": 254,
+     "H": 205
     }
    }
   },
@@ -1285,6 +1517,14 @@
      "file": "lib/face_m/fox_smug_mouth.png",
      "mw": 105,
      "mh": 59
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -34.5,
+     "w": 274,
+     "h": 108,
+     "W": 276,
+     "H": 177
     }
    },
    "hurt": {
@@ -1303,6 +1543,14 @@
      "file": "lib/face_m/fox_hurt_mouth.png",
      "mw": 143,
      "mh": 63
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -24.5,
+     "w": 260,
+     "h": 145,
+     "W": 262,
+     "H": 194
     }
    }
   },
@@ -1325,6 +1573,14 @@
      "file": "lib/face_m/bucktooth_smug_mouth.png",
      "mw": 106,
      "mh": 55
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -29.0,
+     "w": 253,
+     "h": 119,
+     "W": 253,
+     "H": 179
     }
    },
    "hurt": {
@@ -1343,6 +1599,14 @@
      "file": "lib/face_m/bucktooth_hurt_mouth.png",
      "mw": 139,
      "mh": 67
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -28.0,
+     "w": 256,
+     "h": 135,
+     "W": 257,
+     "H": 193
     }
    }
   },
@@ -1365,6 +1629,14 @@
      "file": "lib/face_m/lips_smug_mouth.png",
      "mw": 135,
      "mh": 69
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -38.0,
+     "w": 263,
+     "h": 109,
+     "W": 264,
+     "H": 185
     }
    },
    "hurt": {
@@ -1383,6 +1655,14 @@
      "file": "lib/face_m/lips_hurt_mouth.png",
      "mw": 149,
      "mh": 81
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -29.0,
+     "w": 268,
+     "h": 138,
+     "W": 270,
+     "H": 198
     }
    }
   }
@@ -2094,7 +2374,8 @@
     "ay": 0.37593931147857457,
     "ax": 0.5079822207515806,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5
    },
    "back": {
     "file": "lib/hair_f/longbangs_back.png",
@@ -2125,7 +2406,8 @@
     "ay": 0.3852767134913135,
     "ax": 0.5039290546405224,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.4694533762057878
    },
    "back": {
     "file": "lib/hair_f/hime_back.png",
@@ -2156,7 +2438,8 @@
     "ay": 0.48006443948594507,
     "ax": 0.5016335514668824,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6798418972332015
    },
    "back": {
     "file": "lib/hair_f/bob_back.png",
@@ -2187,7 +2470,8 @@
     "ay": 0.4066557519691482,
     "ax": 0.5664907534340544,
     "dy": -30,
-    "dx": 30
+    "dx": 30,
+    "hairline": 0.5331125827814569
    },
    "back": {
     "file": "lib/hair_f/ponyhigh_back.png",
@@ -2218,7 +2502,8 @@
     "ay": 0.5199040713369947,
     "ax": 0.5050751148176241,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5601503759398496
    },
    "back": {
     "file": "lib/hair_f/twintail_back.png",
@@ -2249,7 +2534,8 @@
     "ay": 0.25736573178337796,
     "ax": 0.5618357426978069,
     "dy": -45,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5806451612903226
    },
    "back": {
     "file": "lib/hair_f/bun_back.png",
@@ -2280,7 +2566,8 @@
     "ay": 0.3397613934486112,
     "ax": 0.5140864035760457,
     "dy": -25,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.39490445859872614
    },
    "back": {
     "file": "lib/hair_f/wavylong_back.png",
@@ -2311,7 +2598,8 @@
     "ay": 0.5479252718444318,
     "ax": 0.5030335654914575,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.575
    },
    "back": {
     "file": "lib/hair_f/pixie_back.png",
@@ -2342,7 +2630,8 @@
     "ay": 0.4170273051983169,
     "ax": 0.5088394979139264,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5939597315436241
    },
    "back": {
     "file": "lib/hair_f/ponylow_back.png",
@@ -2373,7 +2662,8 @@
     "ay": 0.45,
     "ax": 0.5005490207358572,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6216216216216216
    },
    "back": {
     "file": "lib/hair_f/spacebuns_back.png",
@@ -2404,7 +2694,8 @@
     "ay": 0.6208436865900064,
     "ax": 0.5655452036451596,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.46905537459283386
    },
    "back": {
     "file": "lib/hair_f/sidepony_back.png",
@@ -2435,7 +2726,8 @@
     "ay": 0.33741114639009934,
     "ax": 0.510877362780067,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.4880239520958084
    },
    "back": {
     "file": "lib/hair_f/braid_back.png",
@@ -2466,7 +2758,8 @@
     "ay": 0.3757657073534986,
     "ax": 0.5021436122393673,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.4884488448844885
    },
    "back": {
     "file": "lib/hair_f/twinbraid_back.png",
@@ -2497,7 +2790,8 @@
     "ay": 0.4369832290299563,
     "ax": 0.5117413811138929,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5760869565217391
    },
    "back": {
     "file": "lib/hair_f/flip_back.png",
@@ -2528,7 +2822,8 @@
     "ay": 0.39328521464803623,
     "ax": 0.49704446080574655,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.4812286689419795
    },
    "back": {
     "file": "lib/hair_f/frenchcurl_back.png",
@@ -2559,7 +2854,8 @@
     "ay": 0.4166989564646807,
     "ax": 0.5020129335098807,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.5211267605633803
    },
    "back": {
     "file": "lib/hair_f/halfup_back.png",
@@ -2590,7 +2886,8 @@
     "ay": 0.37321064691689954,
     "ax": 0.5019850469483709,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.28903654485049834
    },
    "back": {
     "file": "lib/hair_f/shoulder_back.png",
@@ -2621,7 +2918,8 @@
     "ay": 0.35431773156895224,
     "ax": 0.5021909380063398,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.26479750778816197
    },
    "back": {
     "file": "lib/hair_f/curtain_back.png",
@@ -2652,7 +2950,8 @@
     "ay": 0.502135635987123,
     "ax": 0.5156899434948324,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6666666666666666
    },
    "back": {
     "file": "lib/hair_f/airy_back.png",
@@ -2683,7 +2982,8 @@
     "ay": 0.4972075824092117,
     "ax": 0.5053235151431593,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6635514018691588
    },
    "back": {
     "file": "lib/hair_f/wolf_back.png",
@@ -2714,7 +3014,8 @@
     "ay": 0.3391789354294965,
     "ax": 0.5096927925416717,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.2485207100591716
    },
    "back": {
     "file": "lib/hair_f/fro_back.png",
@@ -2745,7 +3046,8 @@
     "ay": 0.29483039156395935,
     "ax": 0.49916227829711424,
     "dy": -18,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.23684210526315788
    },
    "back": {
     "file": "lib/hair_f/verylong_back.png",
@@ -2776,7 +3078,8 @@
     "ay": 0.4518293392172322,
     "ax": 0.4953600261042849,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.3153526970954357
    },
    "back": {
     "file": "lib/hair_f/drill_back.png",
@@ -2807,7 +3110,8 @@
     "ay": 0.6230002044746955,
     "ax": 0.5035871992879921,
     "dy": 0,
-    "dx": 0
+    "dx": 0,
+    "hairline": 0.6654804270462633
    },
    "back": {
     "file": "lib/hair_f/shortcurl_back.png",
@@ -2845,6 +3149,14 @@
      "file": "lib/face_f/lashes_smug_mouth.png",
      "mw": 98,
      "mh": 52
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -25.5,
+     "w": 271,
+     "h": 135,
+     "W": 274,
+     "H": 186
     }
    },
    "hurt": {
@@ -2863,6 +3175,14 @@
      "file": "lib/face_f/lashes_hurt_mouth.png",
      "mw": 126,
      "mh": 55
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -18.0,
+     "w": 251,
+     "h": 160,
+     "W": 253,
+     "H": 196
     }
    }
   },
@@ -2885,6 +3205,14 @@
      "file": "lib/face_f/cat_smug_mouth.png",
      "mw": 95,
      "mh": 53
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -29.5,
+     "w": 261,
+     "h": 124,
+     "W": 262,
+     "H": 185
     }
    },
    "hurt": {
@@ -2903,6 +3231,14 @@
      "file": "lib/face_f/cat_hurt_mouth.png",
      "mw": 126,
      "mh": 53
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -19.5,
+     "w": 262,
+     "h": 162,
+     "W": 264,
+     "H": 201
     }
    }
   },
@@ -2925,6 +3261,14 @@
      "file": "lib/face_f/droopy_smug_mouth.png",
      "mw": 93,
      "mh": 49
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -26.0,
+     "w": 269,
+     "h": 124,
+     "W": 271,
+     "H": 178
     }
    },
    "hurt": {
@@ -2943,6 +3287,14 @@
      "file": "lib/face_f/droopy_hurt_mouth.png",
      "mw": 123,
      "mh": 56
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -20.5,
+     "w": 240,
+     "h": 155,
+     "W": 242,
+     "H": 196
     }
    }
   },
@@ -2965,6 +3317,14 @@
      "file": "lib/face_f/squint_smug_mouth.png",
      "mw": 64,
      "mh": 59
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -38.0,
+     "w": 258,
+     "h": 106,
+     "W": 260,
+     "H": 184
     }
    },
    "hurt": {
@@ -2983,6 +3343,14 @@
      "file": "lib/face_f/squint_hurt_mouth.png",
      "mw": 133,
      "mh": 58
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -20.0,
+     "w": 250,
+     "h": 166,
+     "W": 251,
+     "H": 208
     }
    }
   },
@@ -3005,6 +3373,14 @@
      "file": "lib/face_f/monolid_smug_mouth.png",
      "mw": 95,
      "mh": 52
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -32.0,
+     "w": 245,
+     "h": 115,
+     "W": 247,
+     "H": 181
     }
    },
    "hurt": {
@@ -3023,6 +3399,14 @@
      "file": "lib/face_f/monolid_hurt_mouth.png",
      "mw": 128,
      "mh": 53
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -18.5,
+     "w": 244,
+     "h": 165,
+     "W": 245,
+     "H": 204
     }
    }
   },
@@ -3045,6 +3429,14 @@
      "file": "lib/face_f/round_smug_mouth.png",
      "mw": 89,
      "mh": 51
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -25.5,
+     "w": 269,
+     "h": 143,
+     "W": 271,
+     "H": 196
     }
    },
    "hurt": {
@@ -3063,6 +3455,14 @@
      "file": "lib/face_f/round_hurt_mouth.png",
      "mw": 132,
      "mh": 57
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -19.5,
+     "w": 253,
+     "h": 167,
+     "W": 254,
+     "H": 208
     }
    }
   },
@@ -3085,6 +3485,14 @@
      "file": "lib/face_f/makeup_smug_mouth.png",
      "mw": 87,
      "mh": 48
+    },
+    "eyebox": {
+     "cx": -1.0,
+     "cy": -30.5,
+     "w": 286,
+     "h": 118,
+     "W": 288,
+     "H": 179
     }
    },
    "hurt": {
@@ -3103,6 +3511,14 @@
      "file": "lib/face_f/makeup_hurt_mouth.png",
      "mw": 128,
      "mh": 53
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -18.5,
+     "w": 263,
+     "h": 162,
+     "W": 264,
+     "H": 201
     }
    }
   },
@@ -3125,6 +3541,14 @@
      "file": "lib/face_f/almond_smug_mouth.png",
      "mw": 75,
      "mh": 30
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -27.0,
+     "w": 271,
+     "h": 122,
+     "W": 273,
+     "H": 178
     }
    },
    "hurt": {
@@ -3143,6 +3567,14 @@
      "file": "lib/face_f/almond_hurt_mouth.png",
      "mw": 127,
      "mh": 53
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -21.5,
+     "w": 251,
+     "h": 158,
+     "W": 253,
+     "H": 203
     }
    }
   },
@@ -3165,6 +3597,14 @@
      "file": "lib/face_f/dot_smug_mouth.png",
      "mw": 67,
      "mh": 49
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -29.0,
+     "w": 227,
+     "h": 125,
+     "W": 229,
+     "H": 185
     }
    },
    "hurt": {
@@ -3183,6 +3623,14 @@
      "file": "lib/face_f/dot_hurt_mouth.png",
      "mw": 118,
      "mh": 52
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -17.0,
+     "w": 245,
+     "h": 163,
+     "W": 247,
+     "H": 199
     }
    }
   },
@@ -3205,6 +3653,14 @@
      "file": "lib/face_f/deadfish_smug_mouth.png",
      "mw": 81,
      "mh": 45
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -26.0,
+     "w": 275,
+     "h": 140,
+     "W": 276,
+     "H": 192
     }
    },
    "hurt": {
@@ -3223,6 +3679,14 @@
      "file": "lib/face_f/deadfish_hurt_mouth.png",
      "mw": 116,
      "mh": 51
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -17.0,
+     "w": 238,
+     "h": 162,
+     "W": 239,
+     "H": 198
     }
    }
   },
@@ -3245,6 +3709,14 @@
      "file": "lib/face_f/fox_smug_mouth.png",
      "mw": 79,
      "mh": 48
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -27.5,
+     "w": 279,
+     "h": 118,
+     "W": 281,
+     "H": 175
     }
    },
    "hurt": {
@@ -3263,6 +3735,14 @@
      "file": "lib/face_f/fox_hurt_mouth.png",
      "mw": 114,
      "mh": 46
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -16.5,
+     "w": 253,
+     "h": 168,
+     "W": 255,
+     "H": 203
     }
    }
   },
@@ -3285,6 +3765,14 @@
      "file": "lib/face_f/star_smug_mouth.png",
      "mw": 64,
      "mh": 43
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -23.5,
+     "w": 268,
+     "h": 149,
+     "W": 270,
+     "H": 196
     }
    },
    "hurt": {
@@ -3303,6 +3791,14 @@
      "file": "lib/face_f/star_hurt_mouth.png",
      "mw": 115,
      "mh": 46
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -17.0,
+     "w": 256,
+     "h": 168,
+     "W": 256,
+     "H": 204
     }
    }
   },
@@ -3325,6 +3821,14 @@
      "file": "lib/face_f/lips_smug_mouth.png",
      "mw": 104,
      "mh": 55
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -36.0,
+     "w": 270,
+     "h": 117,
+     "W": 271,
+     "H": 189
     }
    },
    "hurt": {
@@ -3343,6 +3847,14 @@
      "file": "lib/face_f/lips_hurt_mouth.png",
      "mw": 122,
      "mh": 52
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -18.0,
+     "w": 246,
+     "h": 152,
+     "W": 248,
+     "H": 190
     }
    }
   },
@@ -3365,6 +3877,14 @@
      "file": "lib/face_f/cherry_smug_mouth.png",
      "mw": 55,
      "mh": 34
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -20.5,
+     "w": 258,
+     "h": 136,
+     "W": 260,
+     "H": 179
     }
    },
    "hurt": {
@@ -3383,6 +3903,14 @@
      "file": "lib/face_f/cherry_hurt_mouth.png",
      "mw": 50,
      "mh": 38
+    },
+    "eyebox": {
+     "cx": 0.5,
+     "cy": -16.0,
+     "w": 243,
+     "h": 153,
+     "W": 244,
+     "H": 185
     }
    }
   },
@@ -3405,6 +3933,14 @@
      "file": "lib/face_f/lashesheavy_smug_mouth.png",
      "mw": 87,
      "mh": 49
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -25.5,
+     "w": 272,
+     "h": 131,
+     "W": 273,
+     "H": 184
     }
    },
    "hurt": {
@@ -3423,6 +3959,14 @@
      "file": "lib/face_f/lashesheavy_hurt_mouth.png",
      "mw": 122,
      "mh": 50
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -19.5,
+     "w": 245,
+     "h": 151,
+     "W": 247,
+     "H": 190
     }
    }
   },
@@ -3445,6 +3989,14 @@
      "file": "lib/face_f/dimple_smug_mouth.png",
      "mw": 63,
      "mh": 44
+    },
+    "eyebox": {
+     "cx": -0.5,
+     "cy": -9.0,
+     "w": 254,
+     "h": 166,
+     "W": 255,
+     "H": 184
     }
    },
    "hurt": {
@@ -3463,6 +4015,14 @@
      "file": "lib/face_f/dimple_hurt_mouth.png",
      "mw": 114,
      "mh": 46
+    },
+    "eyebox": {
+     "cx": 0.0,
+     "cy": -10.0,
+     "w": 233,
+     "h": 168,
+     "W": 233,
+     "H": 190
     }
    }
   }

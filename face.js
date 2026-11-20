@@ -189,6 +189,36 @@ window.FACEMATCH = (() => {
     // 頭型
     const hf = { wr: faceW / faceH, jaw: d(172, 397) / faceW };
 
+    // ---------- 本人五官比例（含額頭）----------
+    // 髮際線：眉心正上方往上找，第一個不是臉皮膚的點（頭髮或背景）；找不到就估 mesh 頂再往上 0.25 臉長
+    const bx = Lm[9].x;
+    let hairY = top - faceH * 0.25;
+    for (let y = browY; y > Math.max(0, top - faceH * 0.8); y -= 2) {
+      const c = cat(bx, y), c2 = cat(bx - faceW * 0.08, y), c3 = cat(bx + faceW * 0.08, y);
+      if (c !== 3 && c2 !== 3 && c3 !== 3) { hairY = y; break; }
+    }
+    const eyeY = (Lm[159].y + Lm[145].y + Lm[386].y + Lm[374].y) / 4;
+    const mouthY = (Lm[13].y + Lm[14].y) / 2;
+    const eyeCL = { x: (Lm[33].x + Lm[133].x) / 2 }, eyeCR = { x: (Lm[263].x + Lm[362].x) / 2 };
+    const raw = {
+      forehead: (browY - hairY) / Math.max(1, chin - hairY),        // 額頭佔 髮際線→下巴
+      eyeT: (eyeY - hairY) / Math.max(1, chin - hairY),             // 眼睛高度
+      gap: Math.abs(eyeCR.x - eyeCL.x) / faceW,                     // 兩眼間距
+      size: (d(33, 133) + d(263, 362)) / 2 / faceW,                 // 眼睛寬
+      mouthT: (mouthY - eyeY) / Math.max(1, chin - eyeY),           // 嘴巴在 眼→下巴 的位置
+      mouthW: d(61, 291) / faceW,                                   // 嘴寬
+    };
+    const MEAN = { forehead: 0.28, eyeT: 0.39, gap: 0.44, size: 0.20, mouthT: 0.59, mouthW: 0.46 };   // 樣本照校正的一般值
+    const clp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const prop = {
+      forehead: clp(0.2 * raw.forehead / MEAN.forehead, 0.06, 0.34),                 // 角色額頭（預設 0.2）
+      eyeDy: 0,                                                                       // 眼睛高低已由額頭決定
+      eyeGap: clp((raw.gap / MEAN.gap - 1) * 1.5, -0.15, 0.15),
+      eyeScale: 1 + clp((raw.size / MEAN.size - 1) * 1.2, -0.2, 0.2),
+      mouthDy: clp((raw.mouthT - MEAN.mouthT) * 0.25, -0.04, 0.04),
+      mouthScale: 1 + clp((raw.mouthW / MEAN.mouthW - 1) * 1.2, -0.2, 0.2),
+    };
+
     // 眼鏡：眼睛外圍一圈的邊緣強度 vs 臉頰；墨鏡：眼睛區很暗
     const edge = (x, y) => { const a = lum(...at(x - 1, y)), b = lum(...at(x + 1, y)), c = lum(...at(x, y - 1)), e = lum(...at(x, y + 1)); return Math.abs(a - b) + Math.abs(c - e); };
     let er = 0, en = 0, ck = 0, cn = 0, eyeL = 0, eyeN = 0;
@@ -232,14 +262,14 @@ window.FACEMATCH = (() => {
       hair: feat.bald ? 'bald' : nearest(HAIR_TAG[hairCat], feat, { fr: 3, len: 2, vol: 1.5, wid: 1, asym: 1, bald: 2 }),
       face: nearest(FACE_TAG[faceCat], ff, { ar: 30, tilt: 2, size: 2, uneven: 1, lips: .5 }),
       head: nearest(Object.fromEntries(Object.entries(HEAD_TAG).filter(([k]) => k.startsWith(g + '_'))), hf, { wr: 10, jaw: 6 }),
-      glasses, beard,
+      glasses, beard, prop,
     };
     // 只挑造型庫裡真的有的
     const LIB = window.STYLE_LIB || {};
     if (pick.hair !== 'bald' && !(LIB[hairCat] && LIB[hairCat][pick.hair])) delete pick.hair;
     if (!(LIB[faceCat] && LIB[faceCat][pick.face])) delete pick.face;
     if (!(LIB.head && LIB.head[pick.head])) delete pick.head;
-    return { pick, debug: { feat, ff, hf, hairArea: +hairArea.toFixed(2), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
+    return { pick, debug: { raw, prop, feat, ff, hf, hairArea: +hairArea.toFixed(2), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
   }
   return { analyze, HAIR_TAG, FACE_TAG, HEAD_TAG };
 })();
