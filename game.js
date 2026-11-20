@@ -87,7 +87,7 @@ function update(dt) {
   // 胸口起伏（以腰為樞紐縮放），子部件反向縮放避免變形
   A.torso.sy = 1 + 0.03 * b; A.torso.sx = 1 - 0.012 * b;
   A.torso.rot = sp.bodyRot.x * 0.4;
-  for (const k of ['head', 'armL', 'armR']) { A[k].sx = 1 / A.torso.sx; A[k].sy = 1 / A.torso.sy; }
+  for (const k of ['head', 'neck', 'armL', 'armR']) if (A[k]) { A[k].sx = 1 / A.torso.sx; A[k].sy = 1 / A.torso.sy; }
   // 頭：囂張的晃頭＋受擊彈簧
   if (window.AVATAR) A.head.sx *= AVATAR.headW();
   A.head.rot = Math.sin(t * 1.1) * 0.035 + sp.headRot.x;

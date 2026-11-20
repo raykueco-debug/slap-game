@@ -93,7 +93,14 @@ def split_mouth(im):
                 mp[x, y] = px[x, y]; ep[x, y] = (0, 0, 0, 0)
     bb = mo.getchannel('A').getbbox()
     info = {'cx': (bb[0] + bb[2]) / 2 - W / 2, 'cy': (bb[1] + bb[3]) / 2 - H / 2, 'w': bb[2] - bb[0]}
-    eb = eyes.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox()
+    # 眼睛區只量眉毛和眼睛：排除藍色（眼淚、汗滴這類漂浮裝飾）
+    em = Image.new('L', eyes.size, 0); epx = eyes.load(); emp = em.load()
+    for yy in range(H):
+        for xx in range(W):
+            r, g, b, a = epx[xx, yy]
+            if a > 60 and not (b > r + 25 and b > g - 5):
+                emp[xx, yy] = 255
+    eb = em.getbbox()
     info['eyes'] = {'cx': (eb[0] + eb[2]) / 2 - W / 2, 'cy': (eb[1] + eb[3]) / 2 - H / 2, 'w': eb[2] - eb[0], 'h': eb[3] - eb[1], 'W': W, 'H': H}
     return eyes, mo.crop(bb), info
 

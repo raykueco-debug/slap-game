@@ -11,6 +11,7 @@ window.PARTS = {
   torsoCollar:{parent:'torso', img:'parts/torso_collar.png', x:0, y:0,   ax:0.5, ay:1.0,  w:null},
   armL:      {parent:'torso', img:'parts/arm_left.png',   x:-68, y:-150, ax:0.62,ay:0.08, w:null},
   armR:      {parent:'torso', img:'parts/arm_right.png',  x:68,  y:-150, ax:0.38,ay:0.08, w:null},
+  neck:      {parent:'torso', img:null,                    x:0,   y:-166, ax:0.5, ay:0.5,  w:null},   // 由 avatar.js 從頭圖切出，固定在身體上
   head:      {parent:'torso', img:'parts/head.png',       x:0,   y:-166, ax:0.5, ay:0.97, w:null},
   hairBack:  {parent:'head',  img:'parts/hair_back.png',  x:0,   y:-118, ax:0.5, ay:0.5,  w:null},
   face:      {parent:'head',  img:'parts/face_smug.png',  x:0,   y:-62,  ax:0.5, ay:0.5,  w:null},
@@ -20,7 +21,7 @@ window.PARTS = {
 // 繪製順序（後面的蓋前面）
 // torso（含後領）→ head（脖子）→ torsoCollar（翻領／V領邊蓋住脖子下緣）→ 手 → 臉、前髮
 // 五官畫在前髮之上（瀏海不蓋眼睛）
-window.DRAW_ORDER = ['hairBack','legs','torso','head','torsoCollar','armL','armR','hairFront','face','faceHurt'];
+window.DRAW_ORDER = ['hairBack','legs','torso','neck','head','torsoCollar','armL','armR','hairFront','face','faceHurt'];
 window.HEAD_UNIT_W = 230; // 頭的基準寬（角色座標）
 // 版面（角色座標）：top＝頭頂、feet＝腳底、headY＝頭中心、neckY＝脖子
 window.LAYOUT = { top: -450, feet: 205, headY: -315, neckY: -200 };

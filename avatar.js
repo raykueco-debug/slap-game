@@ -114,6 +114,40 @@ window.AVATAR = (() => {
   const hairColor = () => (HAIRC.find(s => s.id === cur.hairColor) || HAIRC[0]).c;
   const hairCat = () => 'hair_' + cur.gender, faceCat = () => 'face_' + cur.gender, bodyCat = () => 'body_' + cur.gender;
 
+  // ---------- 眼睛膚色底：眼睛畫在瀏海上時，周圍墊一圈膚色（像透過瀏海看到眼睛）----------
+  function skinSample() {
+    const im = P.head.im; if (!im) return '#fbd7bd';
+    const c = im.getContext ? im : toCanvas(im), d = c.getContext('2d').getImageData(c.width >> 1, (c.height * 0.45) | 0, 1, 1).data;
+    return `rgb(${d[0]},${d[1]},${d[2]})`;
+  }
+  function makeHalo(src, r) {
+    const h = document.createElement('canvas'); h.width = src.width; h.height = src.height;
+    const x = h.getContext('2d');
+    for (let i = 0; i < 16; i++) { const t = i / 16 * Math.PI * 2; x.drawImage(src, Math.cos(t) * r, Math.sin(t) * r); }
+    x.drawImage(src, 0, 0);
+    x.globalCompositeOperation = 'source-in'; x.fillStyle = skinSample(); x.fillRect(0, 0, h.width, h.height);
+    return h;
+  }
+
+  // ---------- 脖子：從頭圖的下巴切開；脖子掛在身體上（不跟頭轉），上緣多留一段藏在下巴後面 ----------
+  const NECK = { head: null, neck: null, cut: 0, H: 0 };
+  function splitNeck(c, chinPx) {
+    const W = c.width, H = c.height, cut = Math.max(0, Math.round(chinPx) - Math.round(H * 0.06));
+    const hc = toCanvas(c), hx = hc.getContext('2d');
+    hx.clearRect(0, Math.round(chinPx) + 2, W, H);                       // 頭：下巴以下清掉
+    const nc = document.createElement('canvas'); nc.width = W; nc.height = H - cut;
+    nc.getContext('2d').drawImage(c, 0, cut, W, H - cut, 0, 0, W, H - cut);  // 脖子：從下巴上方一點到底
+    nc.naturalWidth = W; nc.naturalHeight = H - cut;
+    NECK.head = hc; NECK.neck = nc; NECK.cut = cut; NECK.H = H;
+  }
+  function syncNeck() {
+    const n = P.neck, h = P.head; if (!n || !NECK.neck) return;
+    const hw = h.w != null ? h.w : NECK.head.width * U;                 // 原頭 w 為 null（用原圖比例）
+    n.im = NECK.neck; n.ok = true; n.hidden = false;
+    n.w = hw; n.ax = h.ax; n.x = h.x; n.y = h.y;
+    n.ay = (h.ay * NECK.H - NECK.cut) / (NECK.H - NECK.cut);             // 同一個支點：頭不動時脖子剛好在原位
+  }
+
   // 頭的幾何（head 座標）：頭頂、下巴、頭殼寬、中心 x；頭髮與五官都依「目前這顆頭」定位
   let G = null, G0 = null, SH = 1, SF = 1;
   function geoOf(headId) {
@@ -124,13 +158,71 @@ window.AVATAR = (() => {
     return { top: Y(g.top), chin: Y(g.chin), sw: g.sw * k, cx: X(g.cx), prof: (g.prof || []).map(r => [Y(r[0]), X(r[1]), X(r[2])]) };
   }
   const mapY = y => G.top + (y - G0.top) * SH;          // 原頭上的高度 → 目前這顆頭
+
+  // ---------- 五官不互觸（像素級）----------
+  // 遮罩：face 座標 1 單位＝1 px，範圍 ±R
+  const MR = 160, GAP = 3;
+  function alphaMask(draw, skipTears) {
+    const c = document.createElement('canvas'); c.width = c.height = MR * 2;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.translate(MR, MR); draw(x);
+    const d = x.getImageData(0, 0, MR * 2, MR * 2).data, m = new Uint8Array(MR * MR * 4);
+    for (let i = 0; i < m.length; i++) {
+      const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+      // 眼淚（藍色）不算五官：哭臉的眼淚本來就會流到嘴邊
+      m[i] = d[i * 4 + 3] > 40 && !(skipTears && b > r + 25 && b > g - 5) ? 1 : 0;
+    }
+    return m;
+  }
+  function dilate(m, r) {                       // 方形膨脹 r 單位（安全距離）
+    const N = MR * 2, t = new Uint8Array(m.length), o = new Uint8Array(m.length);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { let v = 0; for (let k = -r; k <= r && !v; k++) { const xx = x + k; if (xx >= 0 && xx < N && m[y * N + xx]) v = 1; } t[y * N + x] = v; }
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { let v = 0; for (let k = -r; k <= r && !v; k++) { const yy = y + k; if (yy >= 0 && yy < N && t[yy * N + x]) v = 1; } o[y * N + x] = v; }
+    return o;
+  }
+  function eyesMaskOf(p) {
+    const w = p.w, h = w * p.im.naturalHeight / p.im.naturalWidth;
+    return alphaMask(x => x.drawImage(p.im, -p.ax * w, -p.ay * h, w, h), true);
+  }
+  function mouthPixels(mo) {                    // 嘴巴不透明像素（相對嘴中心）
+    const r = Math.ceil(Math.max(mo.w, mo.h) / 2) + 2, c = document.createElement('canvas'); c.width = c.height = r * 2;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(mo.im, r - mo.w / 2, r - mo.h / 2, mo.w, mo.h);
+    const d = x.getImageData(0, 0, r * 2, r * 2).data, pts = [];
+    for (let yy = 0; yy < r * 2; yy += 1) for (let xx = 0; xx < r * 2; xx += 1) if (d[(yy * r * 2 + xx) * 4 + 3] > 40) pts.push([xx - r, yy - r]);
+    return pts;
+  }
+  function hits(E, pts, cx, cy) {
+    const N = MR * 2;
+    for (const [dx, dy] of pts) { const X = Math.round(cx + dx) + MR, Y = Math.round(cy + dy) + MR; if (X >= 0 && Y >= 0 && X < N && Y < N && E[Y * N + X]) return true; }
+    return false;
+  }
+  // 嘴巴碰到眼睛眉毛（含眼淚）：依序試「眼睛上移 0→24」×「嘴巴 100%→70%」×「嘴巴往下巴移」，取眼睛動最少、嘴巴最大的解
+  function separate(p, chinL) {
+    const mo = p.mouth, w0 = mo.w, h0 = mo.h, y0 = mo.y, ay0 = p.ay;
+    const hImg = p.w * p.im.naturalHeight / p.im.naturalWidth;
+    for (let up = 0; up <= 30; up += 3) {
+      p.ay = ay0 + up / hImg;
+      const E = dilate(eyesMaskOf(p), GAP);
+      for (const s of [1, 0.92, 0.85, 0.78, 0.7, 0.62]) {
+        mo.w = w0 * s; mo.h = h0 * s;
+        const pts = mouthPixels(mo), maxY = chinL - mo.h / 2 - 1;
+        for (let y = y0; y <= Math.max(y0, maxY); y += 1) if (!hits(E, pts, mo.x, y)) { mo.y = y; return true; }
+      }
+    }
+    p.ay = ay0; mo.w = w0; mo.h = h0; mo.y = y0;          // 找不到解就維持原樣（之後掃描會列出來）
+    return false;
+  }
+  // 眼睛在每個 x 的最低點（face 座標）；八字鬍頂部不能高過這條線
+  function eyeLowProfile(p) {
+    const M = eyesMaskOf(p), N = MR * 2, low = new Float32Array(N).fill(-1e9);
+    for (let x = 0; x < N; x++) for (let y = N - 1; y >= 0; y--) if (M[y * N + x]) { low[x] = y - MR; break; }
+    return { at: (x0, x1) => { let v = -1e9; for (let x = Math.max(0, Math.floor(x0) + MR); x <= Math.min(N - 1, Math.ceil(x1) + MR); x++) v = Math.max(v, low[x]); return v; } };
+  }
   // 臉在某高度的左右邊界（head 座標，不含耳朵）；y0~y1 之間取最窄
   function faceSpan(y0, y1) {
     const pr = G.prof; if (!pr.length) return [-1e3, 1e3];
     let L = -1e9, R = 1e9;
     for (let i = 0; i <= 6; i++) {
-      const y = y0 + (y1 - y0) * i / 6;
-      if (y < pr[0][0] || y > pr[pr.length - 1][0]) return [0, 0];
+      const y = Math.max(pr[1][0], Math.min(pr[pr.length - 2][0], y0 + (y1 - y0) * i / 6));   // 超出輪廓範圍就用最近那排
       let j = 0; while (j < pr.length - 2 && pr[j + 1][0] < y) j++;
       const t = (y - pr[j][0]) / Math.max(1e-6, pr[j + 1][0] - pr[j][0]);
       L = Math.max(L, pr[j][1] + (pr[j + 1][1] - pr[j][1]) * t); R = Math.min(R, pr[j][2] + (pr[j + 1][2] - pr[j][2]) * t);
@@ -149,8 +241,10 @@ window.AVATAR = (() => {
       const e = cur.head !== 'orig' && LIB.head && LIB.head[cur.head];
       const im = e ? await loadImg(e.file) : ORIG.head.im;
       return () => {
-        const c = recolorSkin(im, sk, refL); P.head.im = c;
-        if (!e) { restore('head'); P.head.im = c; return; }
+        const c = recolorSkin(im, sk, refL);
+        splitNeck(c, e ? e.geo.chin : META.headGeo.chin);       // 脖子切出來掛在身體上
+        P.head.im = NECK.head;
+        if (!e) { restore('head'); P.head.im = NECK.head; return; }
         // 整張表同一比例；頭頂對齊原頭頭頂（支點仍在脖子）
         const w = c.width * e.scale * U, h = w * c.height / c.width;
         const top = ORIG.head.ay * META.headH * U;            // 原頭：支點到頭頂的距離
@@ -223,7 +317,7 @@ window.AVATAR = (() => {
             const allow = (R - L) * 0.9;
             if (vw > allow && allow > 0) { const f = allow / vw; kk *= f; if (g > 0) g = Math.round(g * f); }
             const half = (eb.w + 2 * g) * kk / 2, mid = (L + R) / 2 - G.cx;
-            Txx = Math.max(mid - (R - L) * 0.45 + half, Math.min(mid + (R - L) * 0.45 - half, Tx));
+            Txx = R - L > 20 ? Math.max(mid - (R - L) * 0.45 + half, Math.min(mid + (R - L) * 0.45 - half, Tx)) : Tx;
           }
           // 眼距：以眼睛區中線把圖切兩半，左右各往外（或往內）移
           const W0 = im.naturalWidth, H0 = im.naturalHeight, off = Math.max(0, g);
@@ -233,7 +327,7 @@ window.AVATAR = (() => {
           cx.drawImage(im, xs, 0, W0 - xs, H0, off + g + xs, 0, W0 - xs, H0);
           c.naturalWidth = c.width; c.naturalHeight = c.height;
           const pcx = off + W0 / 2 + eb.cx, pcy = H0 / 2 + eb.cy;
-          p.im = c; p.w = c.width * kk; p.ax = (pcx * kk - Txx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
+          p.im = c; p.halo = makeHalo(c, Math.max(3, Math.round(4 / kk))); p.w = c.width * kk; p.ax = (pcx * kk - Txx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
           const eyeBottom = Ty + eb.h * kk / 2;                      // face 座標
           p.eyeBottom = eyeBottom; p.eyeMid = Ty + eb.h * kk * 0.22;   // 眼睛中線略下（眉毛在眼睛區上方）
           p.x = G.cx; p.y = faceY;
@@ -258,7 +352,9 @@ window.AVATAR = (() => {
               mx = Math.max(mid - (R - L) * 0.4 + w / 2, Math.min(mid + (R - L) * 0.4 - w / 2, mx));
             }
             p.mouth = { im: mim, w, h: w * ar, x: mx, y: my };
+            separate(p, chinL);                                      // 像素級：嘴巴不准碰到眼睛眉毛
           }
+          p.eyeLow = eyeLowProfile(p);                               // 眼睛實際最低點（八字鬍用）
         }
       };
     })());
@@ -301,6 +397,7 @@ window.AVATAR = (() => {
     const done = await Promise.all(jobs);
     if (my !== version) return;
     done.forEach(f => f && f());
+    syncNeck();
     if (window.onAvatarChange) window.onAvatarChange();
     // 鬍子跟髮色
     for (const slot of BEARD_SLOTS) { const id = cur[slot]; if (id && accImgs[id]) accImgs[id + '_c'] = recolorHair(accImgs[id], hc, true); }
@@ -351,7 +448,8 @@ window.AVATAR = (() => {
       const ay = BEARD_AY[cur.beardUp] == null ? 0.92 : BEARD_AY[cur.beardUp];
       // 八字鬍底部壓進嘴巴上緣 35%（嘴巴畫在鬍子上面）；頂部不超過眼睛中線略下
       const base = mTop + m.h * 0.35;
-      const room = Math.max(6, base - (P[key].eyeMid == null ? base - 30 : P[key].eyeMid));
+      const eyeLow = P[key].eyeLow ? P[key].eyeLow.at(m.x - w / 2, m.x + w / 2) : (P[key].eyeMid == null ? base - 30 : P[key].eyeMid);
+      const room = Math.max(4, base - eyeLow - GAP);
       if (ay * h > room) { const sq = Math.max(0.6, room / (ay * h)); h *= sq; if (ay * h > room) { const f = room / (ay * h); h *= f; w *= f; } }
       ctx.drawImage(b.im, m.x - w / 2, base - ay * h, w, h);
     }
@@ -384,6 +482,9 @@ window.AVATAR = (() => {
       const clipY = G.chin - (G0.chin - CLIP_Y) * SH;
       ctx.beginPath(); ctx.rect(-2000, -2000, 4000, 2000 + (clipY - p.y)); ctx.clip();
     }
+    if ((key === 'face' || key === 'faceHurt') && p.halo && p.ok) {      // 眼睛膚色底（在鬍子、五官之下）
+      const w = p.w, h = w * p.im.naturalHeight / p.im.naturalWidth; ctx.drawImage(p.halo, -p.ax * w, -p.ay * h, w, h);
+    }
     if (key === 'face' || key === 'faceHurt') { drawBeard(ctx, key); for (const id of accIn('face')) drawAcc(ctx, id, true); }
     return true;
   }
@@ -406,6 +507,11 @@ window.AVATAR = (() => {
     beforePart, afterPart, headTopOffset,
     headW: () => cur.faceW || 1,
     dims: () => Object.assign({}, DIM),
+    // 檢查用：目前五官（囂張／被打）嘴巴是否還碰到眼睛眉毛（0＝不碰；同時回報離眼睛最近的距離）
+    _overlap: () => ['face', 'faceHurt'].map(k => { const p = P[k]; if (!p.mouth) return null;
+      const E0 = eyesMaskOf(p), pts = mouthPixels(p.mouth);
+      for (let g = 0; g <= GAP + 3; g++) if (hits(g ? dilate(E0, g) : E0, pts, p.mouth.x, p.mouth.y)) return g;   // g＝碰到時的膨脹量
+      return 99; }),
     reset: () => set(Object.assign({}, DEF)),
     hairCat, faceCat, bodyCat,
   };
