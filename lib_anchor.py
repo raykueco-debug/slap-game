@@ -274,7 +274,8 @@ def main():
     meta = {'refFront': ref_f[0] / o_hf.height, 'refBack': ref_b[0] / o_hb.height,
             'headSky': hcy / o_head.height, 'headW': o_head.width, 'headH': o_head.height,
             'headGeo': head_geo(o_head), 'hairlineFront': hairline(o_hf),
-            'face': orig_faces}
+            'face': orig_faces,
+            'beardPos': json.load(open(os.path.join(ROOT, 'lib', 'beard_pos.json'), encoding='utf-8'))}
     with open(os.path.join(ROOT, 'lib', 'manifest.js'), 'w', encoding='utf-8') as f:
         f.write('window.STYLE_LIB = ' + json.dumps(man, ensure_ascii=False) + ';\n')
         f.write('window.STYLE_META = ' + json.dumps(meta) + ';\n')

@@ -55,6 +55,11 @@ SHEETS = {
                                  ('monolid', '單眼皮'), ('round', '圓眼'), ('makeup', '濃妝眼線'), ('almond', '淡妝杏眼')], 'smug', 'hurt'),
     'F-FACE-2': pairs('face_f', [('dot', '豆豆眼'), ('deadfish', '死魚眼'), ('fox', '狐狸眼'), ('star', '星星眼'),
                                  ('lips', '厚唇'), ('cherry', '櫻桃小嘴'), ('lashesheavy', '濃妝假睫毛'), ('dimple', '酒窩笑')], 'smug', 'hurt'),
+    'ACC-3': [('acc', i, n, None) for i, n in [
+        ('b_wizard', '長鬍子'), ('b_bushy', '大鬍子'), ('b_viking', '維京辮鬍'), ('b_longchin', '長下巴鬍'),
+        ('b_circle', '圈鬍'), ('b_vandyke', '范戴克鬍'), ('b_anchor', '錨形鬍'), ('b_fumanchu', '長垂八字鬍'),
+        ('b_horseshoe', '馬蹄八字鬍'), ('b_walrus', '海象鬍'), ('b_pencil', '細線鬍'), ('b_muttonchop', '羊排鬢角'),
+        ('b_heavystubble', '濃鬍渣'), ('b_neck', '脖子鬍'), ('b_garibaldi', '圓大鬍'), ('b_ducktail', '鴨尾鬍')]],
 }
 def body(cat, items):
     out = []

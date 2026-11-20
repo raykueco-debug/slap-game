@@ -30,10 +30,6 @@ window.AVATAR = (() => {
     g_half: { slot: 'glasses', space: 'face', y: -8, w: 190 }, g_thick: { slot: 'glasses', space: 'face', y: -8, w: 195 },
     g_cat: { slot: 'glasses', space: 'face', y: -10, w: 195 }, g_sun: { slot: 'glasses', space: 'face', y: -8, w: 195 },
     g_aviator: { slot: 'glasses', space: 'face', y: -6, w: 195 }, g_monocle: { slot: 'glasses', space: 'face', x: 48, y: 4, w: 60, ay: 0.3 },
-    b_stubble: { slot: 'beard', space: 'face', y: 42, w: 170, under: true }, b_mustache: { slot: 'beard', space: 'face', y: 20, w: 80, under: true },
-    b_handlebar: { slot: 'beard', space: 'face', y: 20, w: 100, under: true }, b_goatee: { slot: 'beard', space: 'face', y: 62, w: 44, under: true },
-    b_full: { slot: 'beard', space: 'face', y: 40, w: 190, under: true }, b_boxed: { slot: 'beard', space: 'face', y: 46, w: 150, under: true },
-    b_chinstrap: { slot: 'beard', space: 'face', y: 42, w: 190, under: true }, b_soul: { slot: 'beard', space: 'face', y: 58, w: 18, under: true },
     h_cap: { slot: 'hat', space: 'head', y: -160, w: 250, ay: 0.75 }, h_capback: { slot: 'hat', space: 'head', y: -165, w: 245, ay: 0.75 },
     h_beanie: { slot: 'hat', space: 'head', y: -150, w: 240, ay: 0.8 }, h_bucket: { slot: 'hat', space: 'head', y: -150, w: 270, ay: 0.8 },
     h_sweatband: { slot: 'hat', space: 'head', y: -170, w: 225 }, h_hairband: { slot: 'hat', space: 'head', y: -200, w: 230, ay: 0.4 },
@@ -314,6 +310,15 @@ window.AVATAR = (() => {
   }
 
   // ---------- 繪製掛勾（game.js 每個部件畫之前／之後呼叫） ----------
+  // 鬍子：以嘴巴中心或下巴為基準（face 座標），寬度跟著五官縮放；畫在五官之下
+  function drawBeard(ctx, key) {
+    const id = cur.beard, bp = META.beardPos && META.beardPos[id], im = accImgs[id + '_c'] || accImgs[id];
+    if (!id || !bp || !im || !G) return;
+    const m = P[key].mouth || P.face.mouth;
+    const ref = bp.at === 'chin' ? [0, G.chin - P[key].y] : m ? [m.x, m.y] : [0, (META.face.smug.m.cy) * U * SF];
+    const w = bp.w * SF, h = w * (im.naturalHeight || im.height) / (im.naturalWidth || im.width);
+    ctx.drawImage(im, ref[0] - w / 2, ref[1] - bp.ay * h, w, h);
+  }
   function drawAcc(ctx, id, under) {
     const pos = ACC_POS[id], im = accImgs[id + '_c'] || accImgs[id];
     if (!pos || !im || !G || !!pos.under !== !!under) return;
@@ -342,7 +347,7 @@ window.AVATAR = (() => {
       const clipY = G.chin - (G0.chin - CLIP_Y) * SH;
       ctx.beginPath(); ctx.rect(-2000, -2000, 4000, 2000 + (clipY - p.y)); ctx.clip();
     }
-    if (key === 'face' || key === 'faceHurt') for (const id of accIn('face')) drawAcc(ctx, id, true);
+    if (key === 'face' || key === 'faceHurt') { drawBeard(ctx, key); for (const id of accIn('face')) drawAcc(ctx, id, true); }
     return true;
   }
   function afterPart(key, ctx) {

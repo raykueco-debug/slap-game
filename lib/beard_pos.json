@@ -1,0 +1,105 @@
+{
+ "_說明": "鬍子定位：w＝寬度（角色座標，原臉五官寬約 159）；at＝基準（mouth 嘴巴中心／chin 下巴）；ay＝圖片高度的哪個比例對準基準（負＝整張在基準下方、>1＝整張在基準上方）",
+ "b_stubble": {
+  "w": 160,
+  "at": "chin",
+  "ay": 0.6
+ },
+ "b_mustache": {
+  "w": 78,
+  "ay": 1.2
+ },
+ "b_handlebar": {
+  "w": 100,
+  "ay": 1.15
+ },
+ "b_goatee": {
+  "w": 50,
+  "at": "chin",
+  "ay": 0.42
+ },
+ "b_full": {
+  "w": 170,
+  "ay": 0.2
+ },
+ "b_boxed": {
+  "w": 150,
+  "ay": 0.22
+ },
+ "b_chinstrap": {
+  "w": 165,
+  "at": "chin",
+  "ay": 0.6
+ },
+ "b_soul": {
+  "w": 20,
+  "ay": -0.35
+ },
+ "b_wizard": {
+  "w": 165,
+  "ay": 0.07
+ },
+ "b_bushy": {
+  "w": 180,
+  "ay": 0.14
+ },
+ "b_viking": {
+  "w": 178,
+  "ay": 0.1
+ },
+ "b_longchin": {
+  "w": 80,
+  "ay": 0.06
+ },
+ "b_circle": {
+  "w": 92,
+  "ay": 0.36
+ },
+ "b_vandyke": {
+  "w": 105,
+  "ay": 0.3
+ },
+ "b_anchor": {
+  "w": 100,
+  "ay": 0.32
+ },
+ "b_fumanchu": {
+  "w": 105,
+  "ay": 0.1
+ },
+ "b_horseshoe": {
+  "w": 105,
+  "ay": 0.25
+ },
+ "b_walrus": {
+  "w": 95,
+  "ay": 0.8
+ },
+ "b_pencil": {
+  "w": 80,
+  "ay": 1.4
+ },
+ "b_muttonchop": {
+  "w": 155,
+  "at": "chin",
+  "ay": 0.66
+ },
+ "b_heavystubble": {
+  "w": 160,
+  "at": "chin",
+  "ay": 0.6
+ },
+ "b_neck": {
+  "w": 150,
+  "at": "chin",
+  "ay": 0.25
+ },
+ "b_garibaldi": {
+  "w": 180,
+  "ay": 0.17
+ },
+ "b_ducktail": {
+  "w": 170,
+  "ay": 0.17
+ }
+}

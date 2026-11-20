@@ -152,12 +152,31 @@ window.FACEMATCH = (() => {
     const hairPx = [];
     let hn = 0, hx0 = 1e9, hx1 = -1, hy0 = 1e9, hy1 = -1;
     const ext = faceH * 1.6;
+    // 眉毛以下、臉寬範圍內的毛髮＝鬍子（長鬍子會垂到下巴以下），不算頭髮
+    const browY0 = (Lm[105].y + Lm[334].y) / 2;
     for (let y = Math.max(0, top - ext); y < Math.min(H, chin + ext); y += 2) for (let x = Math.max(0, fx0 - faceW); x < Math.min(W, fx1 + faceW); x += 2) {
-      if (cat(x, y) !== 1) continue; hn++;
+      if (cat(x, y) !== 1) continue;
+      if (y > browY0 && x > fx0 && x < fx1) continue;
+      hn++;
       const c = at(x, y); hairPx.push(c);
-      if (x < hx0) hx0 = x; if (x > hx1) hx1 = x; if (y < hy0) hy0 = y; if (y > hy1) hy1 = y;
+      if (y < browY0) { if (x < hx0) hx0 = x; if (x > hx1) hx1 = x; }   // 頭髮寬度只看眉毛以上（排除比臉寬的鬍子）
+      if (y < hy0) hy0 = y; if (y > hy1) hy1 = y;
     }
     const hairArea = hn * 4 / (faceW * faceH);
+    // 頭髮長度：臉兩側（臉寬外 25% 內）從眼睛到下巴這段，有頭髮的排數比例；有連下來才看下巴以下
+    const eyeY0 = (Lm[159].y + Lm[386].y) / 2;
+    // 臉邊往外隔 8% 再看到 30%：避開緊貼下顎的鬍子邊；任一側有就算（頭髮可能撥到一邊）
+    const sideHair = y => { let L = false, R = false;
+      for (let x = fx0 - faceW * 0.3; x < fx0 - faceW * 0.08; x += 2) if (cat(x, y) === 1) { L = true; break; }
+      for (let x = fx1 + faceW * 0.08; x < fx1 + faceW * 0.3; x += 2) if (cat(x, y) === 1) { R = true; break; }
+      return L || R; };
+    let sdc = 0, sdn = 0; for (let y = Lm[1].y; y < Math.max(Lm[61].y, Lm[291].y); y += 2) /* 鼻尖→嘴角：鬢角到不了、長髮會經過 */ { sdn++; if (sideHair(y)) sdc++; }
+    const sideCov = sdn ? sdc / sdn : 0;
+    let below = 0, bn = 0; for (let y = chin; y < Math.min(H, chin + faceH * 0.9); y += 3) { bn++; if (sideHair(y)) below++; }
+    const belowCov = bn ? below / bn : 0;
+    // 眉毛以上的頭髮量（光頭判斷用）
+    let topHair = 0; for (let y = Math.max(0, top - faceH * 0.6); y < browY0; y += 2) for (let x = fx0; x < fx1; x += 2) if (cat(x, y) === 1) topHair++;
+    const topArea = topHair * 4 / (faceW * faceH);
     // 髮色：取偏暗的 15%~55% 段平均（避免邊緣混到背景、高光）
     hairPx.sort((a, b) => lum(...a) - lum(...b));
     const seg2 = hairPx.slice(Math.floor(hairPx.length * 0.15), Math.max(1, Math.floor(hairPx.length * 0.55)));
@@ -173,10 +192,10 @@ window.FACEMATCH = (() => {
     const feat = {
       fr: (frL + frR) / 2,
       asym: Math.min(1, Math.abs(frL - frR) * 2),
-      len: hy1 < 0 ? 0 : Math.max(0, Math.min(2.4, (hy1 - chin) / (faceH * 0.5) + 0.3)),
+      len: sideCov < 0.4 ? 0 : sideCov < 0.75 ? 0.6 : Math.min(2.4, 1 + belowCov * 1.6),
       vol: hy0 > 1e8 ? 0 : Math.max(0, Math.min(1, ((top - faceH * 0.22) - hy0) / (faceH * 0.35))),  // 頭殼頂以上的頭髮厚度
       wid: hx1 < 0 ? 0 : Math.max(0, Math.min(1, ((hx1 - hx0) / faceW - 1.1) / 0.9)),
-      bald: hairArea < 0.08 ? 1 : 0,
+      bald: topArea < 0.03 ? 1 : 0,
     };
 
     // 五官
@@ -251,10 +270,22 @@ window.FACEMATCH = (() => {
         for (const [x, y] of pts) { if (lum(...at(x, y)) < cheekL * 0.72) dark++; if (cat(x, y) === 1) hair++; }
         return Math.max(dark, hair) / pts.length; };
       const chinF = score([18, 200, 199, 175]), lipF = score([164, 167, 393, 165, 391]), jawF = score([172, 397, 136, 365, 150, 379]);
-      beardDbg = { chinF: +chinF.toFixed(2), lipF: +lipF.toFixed(2), jawF: +jawF.toFixed(2), cheekL: Math.round(cheekL) };
+      // 長度：下巴以下（下巴→再往下 0.5 臉長、下顎寬內）有鬍子的排數比例；寬度：嘴巴高度在臉寬外側有沒有鬍子
+      const isB = (x, y) => cat(x, y) === 1;   // 只認毛髮分割：脖子陰影、深色衣服、整張偏暗都不算
+      let lr = 0, ln = 0;
+      for (let y = chin + faceH * 0.06; y < Math.min(H - 1, chin + faceH * 0.55); y += 3) {
+        ln++; let c = 0, n = 0;
+        for (let x = Lm[172].x; x < Lm[397].x; x += 3) { n++; if (isB(x, y)) c++; }
+        if (n && c / n > 0.5) lr++;
+      }
+      const longF = ln ? lr / ln : 0;
+      let wc = 0, wn = 0;
+      for (let y = Lm[61].y; y < chin; y += 3) for (const x of [fx0 - faceW * 0.08, fx1 + faceW * 0.08]) { wn++; if (isB(x, y)) wc++; }
+      const wideF = wn ? wc / wn : 0;
+      beardDbg = { chinF: +chinF.toFixed(2), lipF: +lipF.toFixed(2), jawF: +jawF.toFixed(2), longF: +longF.toFixed(2), wideF: +wideF.toFixed(2), cheekL: Math.round(cheekL) };
       if (gender === 'm') {
         const C = chinF > 0.45, Lp = lipF > 0.6, J = jawF > 0.4;   // 上唇門檻較高：鼻子下方常有陰影
-        if (C && J && Lp) beard = 'b_full';
+        if (C && J && Lp) beard = longF > 0.55 ? 'b_wizard' : wideF > 0.5 ? 'b_bushy' : longF > 0.3 ? 'b_garibaldi' : 'b_full';
         else if (C && J) beard = 'b_chinstrap';
         else if (C && Lp) beard = 'b_boxed';
         else if (C) beard = chinF > 0.6 ? 'b_goatee' : 'b_soul';
@@ -279,7 +310,7 @@ window.FACEMATCH = (() => {
     if (pick.hair !== 'bald' && !(LIB[hairCat] && LIB[hairCat][pick.hair])) delete pick.hair;
     if (!(LIB[faceCat] && LIB[faceCat][pick.face])) delete pick.face;
     if (!(LIB.head && LIB.head[pick.head])) delete pick.head;
-    return { pick, debug: { raw, prop, feat, ff, hf, hairArea: +hairArea.toFixed(2), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
+    return { pick, debug: { raw, prop, feat, ff, hf, hairArea: +hairArea.toFixed(2), sideCov: +sideCov.toFixed(2), belowCov: +belowCov.toFixed(2), topArea: +topArea.toFixed(3), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
   }
   return { analyze, HAIR_TAG, FACE_TAG, HEAD_TAG };
 })();
