@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>巴掌小子</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#ffe6c2;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif}
+  canvas{display:block;width:100vw;height:100vh}
+  #hud{position:fixed;top:max(10px,env(safe-area-inset-top));left:0;right:0;display:flex;justify-content:center;gap:18px;
+    pointer-events:none;font-weight:900;color:#3a2a1a;font-size:18px}
+  #hud b{font-size:22px;color:#c0392b}
+  #hint{position:fixed;bottom:max(14px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;pointer-events:none;
+    color:#7a5a3a;font-size:14px;font-weight:700;transition:opacity 1s}
+  #edit{position:fixed;top:50px;left:8px;background:#fffd;border:2px solid #333;border-radius:8px;padding:8px;font-size:13px;z-index:5}
+  #edit button,#edit select{font-size:14px;margin:2px}
+  #edit textarea{width:260px;height:120px;font-size:11px;display:block;margin-top:4px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><span>巴掌 <b id="nSlap">0</b></span><span>拳 <b id="nPunch">0</b></span><span>最高連擊 <b id="nBest">0</b></span></div>
+<div id="hint">左右滑＝巴掌　點＝出拳　上滑＝上勾拳　下滑＝槌頭</div>
+<script src="parts.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
