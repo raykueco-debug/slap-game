@@ -122,9 +122,23 @@ window.AVATAR = (() => {
     const topU = ORIG.head.ay * META.headH * U, g0 = META.headGeo;
     const e = headId !== 'orig' && LIB.head && LIB.head[headId];
     const g = e && e.geo ? e.geo : g0, k = e && e.geo ? e.scale * U : U;
-    return { top: -topU + g.top * k, chin: -topU + g.chin * k, sw: g.sw * k, cx: (g.cx - g.W / 2) * k };
+    const X = px => (px - g.W / 2) * k, Y = py => -topU + py * k;
+    return { top: Y(g.top), chin: Y(g.chin), sw: g.sw * k, cx: X(g.cx), prof: (g.prof || []).map(r => [Y(r[0]), X(r[1]), X(r[2])]) };
   }
   const mapY = y => G.top + (y - G0.top) * SH;          // 原頭上的高度 → 目前這顆頭
+  // 臉在某高度的左右邊界（head 座標，不含耳朵）；y0~y1 之間取最窄
+  function faceSpan(y0, y1) {
+    const pr = G.prof; if (!pr.length) return [-1e3, 1e3];
+    let L = -1e9, R = 1e9;
+    for (let i = 0; i <= 6; i++) {
+      const y = y0 + (y1 - y0) * i / 6;
+      if (y < pr[0][0] || y > pr[pr.length - 1][0]) return [0, 0];
+      let j = 0; while (j < pr.length - 2 && pr[j + 1][0] < y) j++;
+      const t = (y - pr[j][0]) / Math.max(1e-6, pr[j + 1][0] - pr[j][0]);
+      L = Math.max(L, pr[j][1] + (pr[j + 1][1] - pr[j][1]) * t); R = Math.min(R, pr[j][2] + (pr[j + 1][2] - pr[j][2]) * t);
+    }
+    return [L, R];
+  }
   async function apply() {
     if (!ready) return;
     const my = ++version;
@@ -200,25 +214,51 @@ window.AVATAR = (() => {
           const ebTop = Math.min(ebTop0, yHl + fore * (chinL - yHl));
           const sv = Math.max(1, Math.min(1.3, (my0 - ebTop) / (my0 - ebTop0)));
           const Tw = ref.eyebox.w * U * SF * sv * pr.eyeScale, Tx = ref.eyebox.cx * U * SF;
-          const Ty = ebTop + ebH * sv / 2 + pr.eyeDy * HL;
-          const kk = Tw / eb.w;
+          let Ty = ebTop + ebH * sv / 2 + pr.eyeDy * HL;
+          let kk = Tw / eb.w;
+          // ---- 邊界：眼睛區（含眼距）不能超出臉輪廓 ----
+          let g = Math.round(pr.eyeGap * eb.w * 0.5);
+          let Txx = Tx;
+          for (let it = 0; it < 3; it++) {
+            const hh = eb.h * kk, vw = (eb.w + 2 * g) * kk;
+            const [L, R] = faceSpan(faceY + Ty - hh * 0.35, faceY + Ty + hh / 2);   // 眉毛上緣可以碰到頭髮，從眼睛那幾排開始算
+            const allow = (R - L) * 0.9;
+            if (vw > allow && allow > 0) { const f = allow / vw; kk *= f; if (g > 0) g = Math.round(g * f); }
+            const half = (eb.w + 2 * g) * kk / 2, mid = (L + R) / 2 - G.cx;
+            Txx = Math.max(mid - (R - L) * 0.45 + half, Math.min(mid + (R - L) * 0.45 - half, Tx));
+          }
           // 眼距：以眼睛區中線把圖切兩半，左右各往外（或往內）移
-          const g = Math.round(pr.eyeGap * eb.w * 0.5), W0 = im.naturalWidth, H0 = im.naturalHeight, off = Math.max(0, g);
+          const W0 = im.naturalWidth, H0 = im.naturalHeight, off = Math.max(0, g);
           const c = document.createElement('canvas'); c.width = W0 + 2 * off; c.height = H0;
           const cx = c.getContext('2d'), xs = Math.round(W0 / 2 + eb.cx);
           cx.drawImage(im, 0, 0, xs, H0, off - g, 0, xs, H0);
           cx.drawImage(im, xs, 0, W0 - xs, H0, off + g + xs, 0, W0 - xs, H0);
           c.naturalWidth = c.width; c.naturalHeight = c.height;
           const pcx = off + W0 / 2 + eb.cx, pcy = H0 / 2 + eb.cy;
-          p.im = c; p.w = c.width * kk; p.ax = (pcx * kk - Tx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
+          p.im = c; p.w = c.width * kk; p.ax = (pcx * kk - Txx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
+          const eyeBottom = Ty + eb.h * kk / 2;                      // face 座標
           p.x = G.cx; p.y = faceY;
           // 嘴巴：定稿嘴位；大小＝定稿嘴寬 ×（此款嘴/眼睛區 比上 定稿嘴/眼睛區，限 0.85~1.15）× 照片嘴大小
           p.mouth = null;
           const mim = ims[l + 'M'];
           if (mim && s.mouth) {
             const rel = (s.mouth.w / eb.w) / (ref.m.w / ref.eyebox.w);
-            const w = ref.m.w * U * SF * Math.max(0.85, Math.min(1.15, rel)) * pr.mouthScale * (1 + (sv - 1) * 0.5);
-            p.mouth = { im: mim, w, h: w * mim.naturalHeight / mim.naturalWidth, x: ref.m.cx * U * SF, y: ref.m.cy * U * SF + pr.mouthDy * HL };
+            let w = ref.m.w * U * SF * Math.max(0.85, Math.min(1.15, rel)) * pr.mouthScale * (1 + (sv - 1) * 0.5);
+            const ar = mim.naturalHeight / mim.naturalWidth;
+            let my = ref.m.cy * U * SF + pr.mouthDy * HL, mx = ref.m.cx * U * SF;
+            // ---- 邊界：嘴巴不低於下巴、不壓到眼睛、不超出臉寬 ----
+            const chinL = G.chin - faceY - HL * 0.04;
+            for (let it = 0; it < 3; it++) {
+              const h = w * ar;
+              if (my + h / 2 > chinL) my = chinL - h / 2;
+              if (my - h / 2 < eyeBottom + 2) my = Math.min(chinL - h / 2, eyeBottom + 2 + h / 2);
+              const [L, R] = faceSpan(faceY + my - h / 2, faceY + my + h / 2);
+              const allow = (R - L) * 0.75;
+              if (w > allow && allow > 0) w = allow;
+              const mid = (L + R) / 2 - G.cx;
+              mx = Math.max(mid - (R - L) * 0.4 + w / 2, Math.min(mid + (R - L) * 0.4 - w / 2, mx));
+            }
+            p.mouth = { im: mim, w, h: w * ar, x: mx, y: my };
           }
         }
       };

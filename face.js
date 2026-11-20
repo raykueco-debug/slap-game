@@ -238,19 +238,29 @@ window.FACEMATCH = (() => {
     const accF = acc / Math.max(1, accN);
     const glasses = (accF > 0.12 && eyeDark < 0.45) || eyeDark < 0.3 ? 'g_sun' : accF > 0.06 ? (accF > 0.2 ? 'g_thick' : 'g_square') : null;
 
-    // 鬍子（男）：下巴、上唇、下顎附近有多少像素被分割成「毛髮」
-    let beard = null;
-    if (gender === 'm') {
-      const frac = idx => { let h = 0, n = 0; const r = faceW * 0.05;
-        for (const i of idx) for (let dy = -r; dy <= r; dy += 2) for (let dx = -r; dx <= r; dx += 2) { n++; if (cat(Lm[i].x + dx, Lm[i].y + dy) === 1) h++; }
-        return h / n; };
-      const chinF = frac([152, 148, 377, 175, 199]), lipF = frac([164, 167, 393, 37, 267]), jawF = frac([172, 397, 136, 365, 58, 288]);
-      if (chinF > 0.35 && jawF > 0.3) beard = 'b_full';
-      else if (chinF > 0.35 && lipF > 0.3) beard = 'b_boxed';
-      else if (chinF > 0.35) beard = 'b_goatee';
-      else if (lipF > 0.35) beard = 'b_mustache';
-      else if (chinF > 0.15 && jawF > 0.15) beard = 'b_stubble';
-      var beardDbg = { chinF: +chinF.toFixed(2), lipF: +lipF.toFixed(2), jawF: +jawF.toFixed(2) };
+    // 鬍子（男）：跟上臉頰（同光線、不長鬍子）比，下唇下方／上唇／兩側下顎「明顯比較暗」的像素比例，
+    //            再加上分割模型判成毛髮的比例；下巴取下唇正下方，避開下巴底下的陰影
+    let beard = null, beardDbg = null;
+    {
+      const disc = (idx, rf) => { const out = []; const r = faceW * rf;
+        for (const i of idx) for (let dy = -r; dy <= r; dy += 2) for (let dx = -r; dx <= r; dx += 2) if (dx * dx + dy * dy <= r * r) out.push([Lm[i].x + dx, Lm[i].y + dy]);
+        return out; };
+      const cheekPts = disc([50, 280, 117, 346, 123, 352], 0.045);
+      const cheekL = cheekPts.reduce((s, p) => s + lum(...at(p[0], p[1])), 0) / cheekPts.length;
+      const score = idx => { const pts = disc(idx, 0.045); let dark = 0, hair = 0;
+        for (const [x, y] of pts) { if (lum(...at(x, y)) < cheekL * 0.72) dark++; if (cat(x, y) === 1) hair++; }
+        return Math.max(dark, hair) / pts.length; };
+      const chinF = score([18, 200, 199, 175]), lipF = score([164, 167, 393, 165, 391]), jawF = score([172, 397, 136, 365, 150, 379]);
+      beardDbg = { chinF: +chinF.toFixed(2), lipF: +lipF.toFixed(2), jawF: +jawF.toFixed(2), cheekL: Math.round(cheekL) };
+      if (gender === 'm') {
+        const C = chinF > 0.45, Lp = lipF > 0.6, J = jawF > 0.4;   // 上唇門檻較高：鼻子下方常有陰影
+        if (C && J && Lp) beard = 'b_full';
+        else if (C && J) beard = 'b_chinstrap';
+        else if (C && Lp) beard = 'b_boxed';
+        else if (C) beard = chinF > 0.6 ? 'b_goatee' : 'b_soul';
+        else if (lipF > 0.7) beard = 'b_mustache';
+        else if (chinF > 0.25 && jawF > 0.2) beard = 'b_stubble';
+      }
     }
 
     const AV = window.AVATAR, g = gender;

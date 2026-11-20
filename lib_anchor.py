@@ -132,7 +132,22 @@ def head_geo(im):
     lim = top + int((chin - top) * 0.42)
     best = max(((rows[y][1] - rows[y][0], y) for y in range(top, lim) if rows[y]))
     y = best[1]
-    return {'top': top, 'chin': chin, 'sw': best[0], 'cx': (rows[y][0] + rows[y][1]) / 2, 'W': W, 'H': H}
+    cx = (rows[y][0] + rows[y][1]) / 2
+    # 臉輪廓：每個高度從中線往外掃，碰到描邊（暗）或透明就是臉邊界；耳朵在描邊外面不算
+    px = im.load()
+    def edge(yy, step):
+        x = int(cx)
+        while 0 <= x < W:
+            r, g, b, a = px[x, yy]
+            if a <= TH or (0.3 * r + 0.59 * g + 0.11 * b) < 90:
+                return x
+            x += step
+        return x
+    prof = []
+    for k in range(25):
+        yy = int(top + 4 + (chin - top - 4) * k / 24)
+        prof.append([yy, edge(yy, -1), edge(yy, 1)])
+    return {'top': top, 'chin': chin, 'sw': best[0], 'cx': cx, 'W': W, 'H': H, 'prof': prof}
 
 
 def main():
