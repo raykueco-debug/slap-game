@@ -30,6 +30,7 @@ for (const k in (window.SPRITES || {})) {
   const d = window.SPRITES[k]; const im = new Image();
   SP_IMG[k] = Object.assign({}, d, { im: im, ok: false }); im.onload = () => { SP_IMG[k].ok = true; }; im.src = d.img;
 }
+function armLength() { const p = P.armL; return p.ok ? partW(p) * p.im.naturalHeight / p.im.naturalWidth * 0.86 : 90; }
 function partW(p) { return p.w != null ? p.w : p.im.naturalWidth * IMG_SCALE; }
 
 // ---------- 動態狀態 ----------
@@ -43,6 +44,15 @@ const sp = {
 function stepSpring(s, dt) { s.v += (-s.k * s.x - s.d * s.v) * dt; s.x += s.v * dt; }
 
 let dizzyT = 0, bumpT = 0;
+// 打身體：手摀住被打的地方（torso 座標）
+let cover = null;
+// 傷勢：第一次被打後不再囂張；巴掌印、腫包、熊貓眼一直留到 KO 回血
+let beenHit = false, faceM = null;
+const bumps = [];                 // 臉上腫包 { x, y, r }（face 座標）
+const eyeDmg = { L: 0, R: 0 };    // 熊貓眼等級 0~3
+const EYE = { L: [-48, -12], R: [48, -12] };
+const HURT_TAUNTS = ['還、還沒完呢…', '你給我記住…', '才、才不痛咧！', '嗚…哼！', '有種再來啊…（發抖）'];
+function resetDamage() { beenHit = false; bumps.length = 0; marks.length = 0; eyeDmg.L = eyeDmg.R = 0; } // { x, y, t, max, arms: ['armL','armR'] }
 // HP 與 KO 流程：fly（被揍飛）→ twinkle（飛到天邊閃一下）→ fall（掉回地上）→ beg（哭著磕頭認錯）→ rise（站起來回滿血）
 const MAX_HP = 100;
 let hp = MAX_HP, hpShow = MAX_HP;
@@ -78,6 +88,20 @@ function update(dt) {
   // 手臂：跟著呼吸擺＋受擊甩動
   A.armL.rot = 0.06 + 0.05 * bLag + sp.arm.x;
   A.armR.rot = -0.06 - 0.05 * bLag - sp.arm.x * 0.8;
+  if (cover) {
+    cover.t += dt;
+    const T = cover.t, M = cover.max;
+    const w = T < 0.08 ? T / 0.08 : T > M - 0.3 ? Math.max(0, (M - T) / 0.3) : 1;
+    const e = w * w * (3 - 2 * w);
+    const armLen = armLength();
+    for (const k of cover.arms) {
+      const dx = cover.x - P[k].x, dy = cover.y - P[k].y;
+      const th = Math.atan2(-dx, dy), dist = Math.hypot(dx, dy);
+      A[k].rot = A[k].rot * (1 - e) + th * e;
+      A[k].sy *= 1 - e + e * Math.max(0.55, Math.min(1, dist / armLen));
+    }
+    if (T >= M) cover = null;
+  }
   // 頭髮：延遲彈跳
   const hb = Math.sin(t * 2.4 - 1.2) * 1.2;
   A.hairFront.dy = hb + sp.hair.x * 6; A.hairFront.rot = -sp.hair.x * 0.03;
@@ -86,7 +110,7 @@ function update(dt) {
   // 台詞
   if (bubble) { bubble.life -= dt; if (bubble.life <= 0) bubble = null; }
   if (!ko && !bubble && hurtT <= 0 && idleT > nextTaunt) {
-    bubble = { txt: pick(TAUNTS), life: 2.0, max: 2.0 };
+    bubble = { txt: pick(beenHit ? HURT_TAUNTS : TAUNTS), life: 2.0, max: 2.0 };
     nextTaunt = idleT + rand(4, 7);
   }
   if (ko) updateKO(dt);
@@ -204,6 +228,38 @@ function drawBumpDizzy() {
     ctx.restore();
   }
 }
+function addBump(x, y, r) {
+  const b = bumps.find(b => Math.hypot(b.x - x, b.y - y) < 22);
+  if (b) b.r = Math.min(30, b.r + 5); else { bumps.push({ x, y, r }); if (bumps.length > 8) bumps.shift(); }
+}
+// 熊貓眼＋腫起來把眼睛擠小、臉上腫包（face 座標）
+function drawInjury() {
+  for (const side of ['L', 'R']) {
+    const n = eyeDmg[side]; if (!n) continue;
+    const [ex, ey] = EYE[side];
+    const g = ctx.createRadialGradient(ex, ey, 4, ex, ey, 34 + 5 * n);
+    g.addColorStop(0, `rgba(55,20,75,${0.55 + 0.12 * n})`); g.addColorStop(0.65, `rgba(80,30,100,${0.35 + 0.1 * n})`); g.addColorStop(1, 'rgba(80,30,100,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(ex, ey, 36 + 5 * n, 28 + 4 * n, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#7a3a2e';
+    // 下眼瞼腫起往上擠
+    ctx.fillStyle = '#f0a48c';
+    ctx.beginPath(); ctx.ellipse(ex + (side === 'L' ? -3 : 3), ey + 16 - 3 * n, 26 + 3 * n, 8 + 4 * n, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ex + (side === 'L' ? -3 : 3), ey + 16 - 3 * n, 26 + 3 * n, 8 + 4 * n, 0, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+    // 上眼皮也腫下來
+    if (n >= 2) {
+      ctx.beginPath(); ctx.ellipse(ex, ey - 15 + 2 * n, 24 + 2 * n, 5 + 3 * n, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(ex, ey - 15 + 2 * n, 24 + 2 * n, 5 + 3 * n, 0, Math.PI * 0.1, Math.PI * 0.9); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(ex - 8, ey + 10 - 3 * n, 6, 2.5, -0.2, 0, Math.PI * 2); ctx.fill();
+  }
+  for (const b of bumps) {
+    const g = ctx.createRadialGradient(b.x - b.r * 0.3, b.y - b.r * 0.3, 1, b.x, b.y, b.r);
+    g.addColorStop(0, '#ff9a8a'); g.addColorStop(1, '#e0584a');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(b.x, b.y, b.r, b.r * 0.82, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#8a3428'; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.ellipse(b.x - b.r * 0.35, b.y - b.r * 0.4, b.r * 0.25, b.r * 0.13, -0.5, 0, Math.PI * 2); ctx.fill();
+  }
+}
 function drawMarks() {
   for (const m of marks) {
     const a = Math.min(1, m.life / 1.5) * 0.55;
@@ -221,7 +277,7 @@ function render() {
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   if (shakeT > 0) { const s = shakeA * shakeT / 0.25; ctx.translate(rand(-s, s), rand(-s, s)); }
 
-  const hurt = hurtT > 0;
+  const hurt = hurtT > 0 || beenHit;
   // 地面影子
   ctx.save(); ctx.fillStyle = 'rgba(120,70,30,.18)';
   ctx.beginPath(); ctx.ellipse(RX + sp.bodyX.x * S * 0.5, RY + (L.feet - 3) * S, 110 * S * (1 + sp.knock.x), 18 * S, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
@@ -245,11 +301,14 @@ function render() {
     const s2 = SP_IMG[spr], h = s2.h, w = h * s2.im.naturalWidth / s2.im.naturalHeight;
     ctx.save(); if (s2.flip) ctx.scale(-1, 1); ctx.drawImage(s2.im, -w / 2, L.feet - h + (s2.dy || 0), w, h); ctx.restore();
   }
-  if (!spr) for (const key of ORDER) {
+  const order = ko && (ko.phase === 'beg' || ko.phase === 'land')
+    ? ORDER.filter(k => !['hairBack', 'head', 'face', 'faceHurt', 'hairFront'].includes(k)).concat(['hairBack', 'head', 'face', 'faceHurt', 'hairFront'])
+    : ORDER;
+  if (!spr) for (const key of order) {
     if (key === 'face' && hurt) continue;
     if (key === 'faceHurt' && !hurt) continue;
     ctx.save(); applyChain(key); drawPart(key);
-    if (key === 'face' || key === 'faceHurt') drawMarks();
+    if (key === 'face' || key === 'faceHurt') { faceM = ctx.getTransform(); drawInjury(); drawMarks(); }
     if (key === 'hairFront') drawBumpDizzy();
     if (EDIT) { ctx.fillStyle = key === sel ? '#f00' : '#0a0'; circ(0, 0, key === sel ? 7 : 4); ctx.fill(); }
     ctx.restore();
@@ -361,7 +420,7 @@ function sfxPunch(rate = 1) {
 
 // ---------- 打擊 ----------
 function onHit(isPunch, dmg = 6) {
-  hp = Math.max(0, hp - dmg);
+  hp = Math.max(0, hp - dmg); beenHit = true;
   hurtT = Math.max(hurtT, isPunch ? 0.7 : 0.9); idleT = 0; nextTaunt = rand(1.4, 2.2);
   combo++; comboT = 1.0; if (combo > best) best = combo;
   if (isPunch) nPunch++; else nSlap++;
@@ -381,7 +440,8 @@ function slap(dir, v) {
   sp.headRot.v += dir * 6 * f; sp.headX.v += dir * 150 * f;
   sp.bodyRot.v += dir * 1.8 * f; sp.bodyX.v += dir * 110 * f;
   sp.arm.v += 2.5 * f; sp.hair.v += 3 * f;
-  marks.push({ x: -dir * rand(50, 64), y: rand(12, 26), rot: -dir * 0.3 + rand(-0.2, 0.2), life: 4 });
+  marks.push({ x: -dir * rand(50, 64), y: rand(12, 26), rot: -dir * 0.3 + rand(-0.2, 0.2), life: Infinity });
+  addBump(-dir * 60, 24, 6);
   if (marks.length > 8) marks.shift();
   onHit(false, 4 + f * 2); shake(8 * f); sfxSlap(f);
   const h = headScreen();
@@ -393,8 +453,22 @@ function punch(x, y) {
   const onHead = y < RY + L.neckY * S;
   const off = Math.max(-1, Math.min(1, (x - h.x) / (110 * S)));
   sp.knock.v -= 2.4; sp.squash.v += 2.8; sp.hair.v += 4;
-  if (onHead) { sp.headRot.v += -off * 5 + rand(-1, 1); sp.headX.v += -off * 80; }
-  else { sp.bodyRot.v += -off * 2; sp.arm.v += 4; sp.headRot.v += rand(-2, 2); }
+  if (onHead) {
+    sp.headRot.v += -off * 5 + rand(-1, 1); sp.headX.v += -off * 80;
+    if (faceM) {
+      const p = faceM.inverse().transformPoint(new DOMPoint(x * DPR, y * DPR));
+      if (Math.abs(p.x) < 115 && p.y > -75 && p.y < 75) {
+        const side = ['L', 'R'].find(k => Math.hypot(p.x - EYE[k][0], p.y - EYE[k][1]) < 34);
+        if (side) eyeDmg[side] = Math.min(3, eyeDmg[side] + 1); else addBump(p.x, p.y, 13);
+      }
+    }
+  }
+  else {
+    sp.bodyRot.v += -off * 2; sp.headRot.v += rand(-2, 2);
+    const lx = (x - (RX + sp.bodyX.x * S)) / S, ly = (y - RY) / S - P.torso.y;
+    const arms = Math.abs(lx) < 35 ? ['armL', 'armR'] : lx < 0 ? ['armL'] : ['armR'];
+    cover = { x: lx, y: ly, t: 0, max: 1.1, arms };
+  }
   onHit(true, 7); shake(6); sfxPunch();
   fx.push({ type: 'emoji', ch: '👊', x, y, size: 64, life: 0.35, max: 0.35, vx: 0, vy: 0 });
   fx.push({ type: 'ring', col: '#ffcc33', x, y, size: 60, life: 0.3, max: 0.3, vx: 0, vy: 0 });
@@ -468,7 +542,7 @@ function updateKO(dt) {
     if (T > 5) { ko.phase = 'rise'; ko.t = 0; bubble = { txt: '……哼，剛剛只是讓你的', life: 2.2, max: 2.2 }; }
   } else if (ko.phase === 'rise') {
     hp = Math.min(MAX_HP, hp + MAX_HP * dt * 1.5);
-    if (T > 0.8) { hp = MAX_HP; ko = null; hurtT = 0; idleT = 0; nextTaunt = 3; sp.squash.v -= 4; return; }
+    if (T > 0.8) { resetDamage(); hp = MAX_HP; ko = null; hurtT = 0; idleT = 0; nextTaunt = 3; sp.squash.v -= 4; return; }
   }
   if (!koSprite()) koPuppetPose();
 }

@@ -66,6 +66,34 @@ def strip_sleeves(torso):
     return out.crop(out.getchannel('A').getbbox())
 
 
+def polo_details(torso):
+    """Polo 細節（座標對應 parts_sheet_polo.png 去袖後的 torso）：
+    翻領外緣紅白滾線、釦排往下延伸略超過深藍段。4 倍超取樣後縮回，邊緣才平滑。"""
+    from PIL import ImageDraw
+    Z = 4
+    W, H = torso.size
+    ov = Image.new('RGBA', (W * Z, H * Z), (0, 0, 0, 0))
+    d = ImageDraw.Draw(ov)
+    P = lambda pts: [(x * Z, y * Z) for x, y in pts]
+    mir = lambda pts: [(W - 1 - x, y) for x, y in pts]
+    NAVY, LINE, RED, WHITE = (34, 44, 91, 255), (20, 18, 28, 255), (214, 40, 52, 255), (248, 248, 246, 255)
+    # 釦排：V 領尖往下到深藍段下緣再多一點
+    x0, x1, y0, y1 = 109, 125, 104, 158
+    d.rounded_rectangle([x0 * Z, y0 * Z, x1 * Z, y1 * Z], radius=3 * Z, fill=NAVY, outline=LINE, width=int(1.8 * Z))
+    for by in (120, 137):
+        d.ellipse([(117 - 2.6) * Z, (by - 2.6) * Z, (117 + 2.6) * Z, (by + 2.6) * Z], fill=WHITE, outline=LINE, width=Z)
+    # 翻領滾線：外側紅、內側白
+    red = [(50, 33), (50, 70), (79, 55)]
+    white = [(54, 35), (54, 66), (79, 51)]
+    for pts, col in ((red, RED), (white, WHITE)):
+        for side in (pts, mir(pts)):
+            d.line(P(side), fill=col, width=int(2.2 * Z), joint='curve')
+    ov = ov.resize((W, H), Image.LANCZOS)
+    out = torso.copy()
+    out.alpha_composite(ov)
+    return out
+
+
 def hole_mask(torso):
     """領口洞內側（深藍、很暗、偏藍）：從上緣中央往下長出相連區域"""
     W, H = torso.size
@@ -159,6 +187,8 @@ def main():
         part = layer.crop(layer.getchannel('A').getbbox())
         if name == 'torso':
             part = strip_sleeves(part)
+            if 'polo' in os.path.basename(sys.argv[1]):
+                part = polo_details(part)
         part.save(os.path.join(out, name + '.png'))
         print(f'  {name}: {part.size}')
         if name == 'torso':
