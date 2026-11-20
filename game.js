@@ -216,7 +216,7 @@ function drawPart(k) {
       ctx.clip('evenodd');
     }
     ctx.drawImage(p.im, -p.ax * w, -p.ay * h, w, h);
-    if (cut) ctx.restore();
+    if (cut) { ctx.restore(); for (const sd of ['L', 'R']) if (eyeDmg[sd]) drawSwollenEye(sd, eyeDmg[sd], p.im, w, h); }
   }
   else if (FALLBACK[k]) FALLBACK[k]();
 }
@@ -260,33 +260,22 @@ function addBump(x, y, r) {
 }
 // 腫眼：原本的眼睛已在 drawPart 挖掉，這裡整顆換畫成「熊貓眼＋上下眼皮腫起、只剩一條縫」
 const EYE_CUT = { rx: 30, ry: 24 };
-function drawSwollenEye(side, n) {
-  const [ex, ey] = EYE[side], sx = side === 'L' ? -1 : 1;
-  const rx = 25 + 4 * n, ry = 20 + 3.5 * n, cx = ex + sx * 1.5 * n, cy = ey - 1;
-  // 包外暈開的瘀青
-  const halo = ctx.createRadialGradient(cx, cy, rx * 0.8, cx, cy, rx * 1.45);
-  halo.addColorStop(0, 'rgba(110,50,120,.45)'); halo.addColorStop(1, 'rgba(110,50,120,0)');
-  ctx.fillStyle = halo; ctx.beginPath(); ctx.ellipse(cx, cy, rx * 1.45, ry * 1.45, 0, 0, Math.PI * 2); ctx.fill();
-  // 鼓起來的大包：中心瘀紫 → 邊緣粉紅，亮面在左上
-  const g = ctx.createRadialGradient(cx - rx * 0.25, cy - ry * 0.3, 2, cx, cy, rx * 1.05);
-  g.addColorStop(0, '#d98aa8'); g.addColorStop(0.45, '#a8558f'); g.addColorStop(0.8, '#8a3f7e'); g.addColorStop(1, '#c8738c');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, sx * 0.12, 0, Math.PI * 2); ctx.fill();
-  ctx.lineWidth = 3.5; ctx.strokeStyle = '#2f1f1c'; ctx.stroke();
-  // 被擠到包下方的一條小縫（越腫越短）
-  const half = Math.max(4, 13 - 3 * n), slitY = cy + ry * 0.45;
-  ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = '#1e1414';
-  ctx.beginPath(); ctx.moveTo(cx - half, slitY - 1); ctx.quadraticCurveTo(cx, slitY + 3, cx + half, slitY - 1); ctx.stroke();
-  ctx.lineWidth = 2.5;
-  for (const k of [-1, 0, 1]) { const x = cx + k * half * 0.7; ctx.beginPath(); ctx.moveTo(x, slitY + 1.5); ctx.lineTo(x + k * 2, slitY + 5); ctx.stroke(); }
-  // 亮面反光
-  ctx.fillStyle = 'rgba(255,255,255,.85)';
-  ctx.beginPath(); ctx.ellipse(cx - rx * 0.38, cy - ry * 0.45, rx * 0.22, ry * 0.13, -0.5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.6)';
-  ctx.beginPath(); ctx.arc(cx - rx * 0.08, cy - ry * 0.62, 2.2, 0, Math.PI * 2); ctx.fill();
+function drawSwollenEye(side, n, im, w, h) {
+  const [ex, ey] = EYE[side];
+  // 紫眼框
+  const R = 31 + 2 * n, Ry = 25 + 1.5 * n;
+  const g = ctx.createRadialGradient(ex, ey, 4, ex, ey, R);
+  g.addColorStop(0, `rgba(105,45,130,${0.45 + 0.08 * n})`); g.addColorStop(0.7, `rgba(120,55,140,${0.35 + 0.08 * n})`); g.addColorStop(1, 'rgba(120,55,140,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(ex, ey, R, Ry, 0, 0, Math.PI * 2); ctx.fill();
+  // 原本的眼睛縮小放回原位（越腫越小）
+  if (!im) return;
+  const sc = w / im.naturalWidth, k = Math.max(0.45, 0.78 - 0.11 * n);
+  const hw = 42, hh = 32; // 來源半寬高（圖片像素）
+  const px = im.naturalWidth / 2 + ex / sc, py = im.naturalHeight / 2 + ey / sc;
+  ctx.drawImage(im, px - hw, py - hh, hw * 2, hh * 2, ex - hw * sc * k, ey - hh * sc * k, hw * 2 * sc * k, hh * 2 * sc * k);
 }
 // 臉上腫包（face 座標）
 function drawInjury() {
-  for (const side of ['L', 'R']) if (eyeDmg[side]) drawSwollenEye(side, eyeDmg[side]);
   for (const b of bumps) {
     const g = ctx.createRadialGradient(b.x - b.r * 0.3, b.y - b.r * 0.3, 1, b.x, b.y, b.r);
     g.addColorStop(0, '#ff9a8a'); g.addColorStop(1, '#e0584a');
