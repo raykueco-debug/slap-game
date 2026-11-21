@@ -126,9 +126,64 @@ window.FACEMATCH = (() => {
     const t = await load(onStatus);
     onStatus && onStatus('分析中…（照片只在這支手機上處理）');
     const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    const sc = Math.min(1, 640 / Math.max(bmp.width, bmp.height));
-    const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * sc); cv.height = Math.round(bmp.height * sc);
-    const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(bmp, 0, 0, cv.width, cv.height); bmp.close && bmp.close();
+    // 第一階段：在較大解析度找臉（照片很小就先放大兩倍）
+    const findFace = (scale) => {
+      const c = document.createElement('canvas'); c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      const r = t.face.detect(c);
+      return r.faceLandmarks && r.faceLandmarks.length ? { lm: r.faceLandmarks[0], c } : null;
+    };
+    // 在原圖的某個區域裡找臉：裁出來放大到 1024 再偵測，特徵點換回原圖座標
+    const findIn = (rx, ry, rw, rh) => {
+      const s2 = 1024 / Math.max(rw, rh), c = document.createElement('canvas');
+      c.width = Math.round(rw * s2); c.height = Math.round(rh * s2);
+      c.getContext('2d').drawImage(bmp, rx, ry, rw, rh, 0, 0, c.width, c.height);
+      const r = t.face.detect(c);
+      if (!(r.faceLandmarks && r.faceLandmarks.length)) return null;
+      return { lm: r.faceLandmarks[0].map(p => ({ x: (rx + p.x * rw) / bmp.width, y: (ry + p.y * rh) / bmp.height })) };
+    };
+    const big = Math.max(bmp.width, bmp.height);
+    let found = findFace(Math.min(1, 1280 / big));
+    if (!found && big < 1000) found = findFace(Math.min(3, 1600 / big));
+    if (!found) {
+      // 臉太小：先用分割模型找「臉部皮膚」的範圍，往外擴大後裁切放大再找
+      const c = document.createElement('canvas'), s1 = Math.min(1, 1024 / big);
+      c.width = Math.round(bmp.width * s1); c.height = Math.round(bmp.height * s1);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      const sg = t.seg.segment(c), mk = sg.categoryMask.getAsUint8Array(), mw0 = sg.categoryMask.width, mh0 = sg.categoryMask.height;
+      let ax0 = 1e9, ax1 = -1, ay0 = 1e9, ay1 = -1;
+      for (let y = 0; y < mh0; y++) for (let x = 0; x < mw0; x++) if (mk[y * mw0 + x] === 3) { if (x < ax0) ax0 = x; if (x > ax1) ax1 = x; if (y < ay0) ay0 = y; if (y > ay1) ay1 = y; }
+      sg.categoryMask.close && sg.categoryMask.close();
+      if (ax1 > 0) {
+        const kx = bmp.width / mw0, ky = bmp.height / mh0, fw = (ax1 - ax0 + 1) * kx, fh = (ay1 - ay0 + 1) * ky, side = Math.max(fw, fh) * 2.2;
+        const mx = (ax0 + ax1) / 2 * kx, my = (ay0 + ay1) / 2 * ky;
+        const rx = Math.max(0, mx - side / 2), ry = Math.max(0, my - side / 2);
+        found = findIn(rx, ry, Math.min(bmp.width - rx, side), Math.min(bmp.height - ry, side));
+      }
+    }
+    if (!found) {
+      // 還是找不到：把照片切成重疊的小塊，一塊一塊放大來找
+      for (const n of [2, 3]) {
+        const tw = bmp.width / n * 1.5, th = bmp.height / n * 1.5;
+        for (let i = 0; i < n && !found; i++) for (let j = 0; j < n && !found; j++) {
+          const rx = Math.min(bmp.width - tw, Math.max(0, (j + 0.5) * bmp.width / n - tw / 2));
+          const ry = Math.min(bmp.height - th, Math.max(0, (i + 0.5) * bmp.height / n - th / 2));
+          found = findIn(Math.max(0, rx), Math.max(0, ry), Math.min(tw, bmp.width), Math.min(th, bmp.height));
+        }
+        if (found) break;
+      }
+    }
+    if (!found) { bmp.close && bmp.close(); throw new Error('找不到臉，換一張正面、清楚的照片試試'); }
+    // 第二階段：以臉為中心裁切（往外留頭髮、鬍子的範圍），放大到 640 再完整分析
+    const fx = found.lm.map(p => p.x * bmp.width), fy = found.lm.map(p => p.y * bmp.height);
+    const x0 = Math.min(...fx), x1 = Math.max(...fx), y0 = Math.min(...fy), y1 = Math.max(...fy);
+    const fs = Math.max(x1 - x0, y1 - y0), ccx = (x0 + x1) / 2, ccy = (y0 + y1) / 2;
+    const half = fs * 1.6;
+    const sx = Math.max(0, ccx - half), sy = Math.max(0, ccy - half * 1.05), sw = Math.min(bmp.width - sx, half * 2), sh = Math.min(bmp.height - sy, half * 2.1);
+    const sc = 640 / Math.max(sw, sh);
+    const cv = document.createElement('canvas'); cv.width = Math.round(sw * sc); cv.height = Math.round(sh * sc);
+    const cx = cv.getContext('2d', { willReadFrequently: true }); cx.imageSmoothingQuality = 'high';
+    cx.drawImage(bmp, sx, sy, sw, sh, 0, 0, cv.width, cv.height); bmp.close && bmp.close();
     const W = cv.width, H = cv.height;
     const fr = t.face.detect(cv);
     if (!fr.faceLandmarks || !fr.faceLandmarks.length) throw new Error('找不到臉，換一張正面、清楚的照片試試');
@@ -175,9 +230,28 @@ window.FACEMATCH = (() => {
     // 頭髮長度：臉兩側（臉寬外 25% 內）從眼睛到下巴這段，有頭髮的排數比例；有連下來才看下巴以下
     const eyeY0 = (Lm[159].y + Lm[386].y) / 2;
     // 臉邊往外隔 8% 再看到 30%：避開緊貼下顎的鬍子邊；任一側有就算（頭髮可能撥到一邊）
+    // 只承認「跟頭頂頭髮相連」的頭髮：從額頭上方往外長出相連區域（排除背景被誤判成頭髮的零星區塊）
+    const conn = new Uint8Array(mw * mh);
+    {
+      const q = [];
+      const seedY = Math.max(0, Math.round((top - faceH * 0.15) * mh / H));
+      for (let yy = Math.max(0, seedY - Math.round(faceH * 0.3 * mh / H)); yy <= seedY; yy++)
+        for (let xx = Math.round(fx0 * mw / W); xx <= Math.round(fx1 * mw / W); xx++)
+          if (xx >= 0 && xx < mw && mask[yy * mw + xx] === 1 && !conn[yy * mw + xx]) { conn[yy * mw + xx] = 1; q.push(yy * mw + xx); }
+      while (q.length) {
+        const i = q.pop(), xx = i % mw, yy = (i / mw) | 0;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = xx + dx, ny = yy + dy;
+          if (nx < 0 || ny < 0 || nx >= mw || ny >= mh) continue;
+          const j = ny * mw + nx;
+          if (!conn[j] && mask[j] === 1) { conn[j] = 1; q.push(j); }
+        }
+      }
+    }
+    const hairC = (x, y) => { const xx = Math.round(x * mw / W), yy = Math.round(y * mh / H); return xx >= 0 && yy >= 0 && xx < mw && yy < mh && conn[yy * mw + xx] === 1; };
     const sideHair = y => { let L = false, R = false;
-      for (let x = fx0 - faceW * 0.3; x < fx0 - faceW * 0.08; x += 2) if (cat(x, y) === 1) { L = true; break; }
-      for (let x = fx1 + faceW * 0.08; x < fx1 + faceW * 0.3; x += 2) if (cat(x, y) === 1) { R = true; break; }
+      for (let x = fx0 - faceW * 0.3; x < fx0 - faceW * 0.08; x += 2) if (hairC(x, y)) { L = true; break; }
+      for (let x = fx1 + faceW * 0.08; x < fx1 + faceW * 0.3; x += 2) if (hairC(x, y)) { R = true; break; }
       return L || R; };
     let sdc = 0, sdn = 0; for (let y = Lm[1].y; y < Math.max(Lm[61].y, Lm[291].y); y += 2) /* 鼻尖→嘴角：鬢角到不了、長髮會經過 */ { sdn++; if (sideHair(y)) sdc++; }
     const sideCov = sdn ? sdc / sdn : 0;
@@ -201,7 +275,8 @@ window.FACEMATCH = (() => {
     const feat = {
       fr: (frL + frR) / 2,
       asym: Math.min(1, Math.abs(frL - frR) * 2),
-      len: sideCov < 0.4 ? 0 : sideCov < 0.75 ? 0.6 : Math.min(2.4, 1 + belowCov * 1.6),
+      // 臉側有頭髮但下巴以下沒有＝鮑伯長度；下巴以下也有才算及肩以上
+      len: sideCov < 0.4 ? 0 : (sideCov < 0.75 || belowCov < 0.15) ? 0.6 : Math.min(2.4, 1 + belowCov * 1.6),
       vol: hy0 > 1e8 ? 0 : Math.max(0, Math.min(1, ((top - faceH * 0.22) - hy0) / (faceH * 0.35))),  // 頭殼頂以上的頭髮厚度
       wid: hx1 < 0 ? 0 : Math.max(0, Math.min(1, ((hx1 - hx0) / faceW - 1.1) / 0.9)),
       bald: topArea < 0.03 ? 1 : 0,
