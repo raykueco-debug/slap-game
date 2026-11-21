@@ -51,7 +51,9 @@
     { key: 'hairColor', name: '髮色', list: () => AV.HAIRC.map(c => ({ id: c.id, name: c.name, sw: c.c })) },
     { key: 'skin', name: '膚色', list: () => AV.SKIN.map(c => ({ id: c.id, name: c.name, sw: c.c || '#fbd7bd' })) },
     { key: 'head', name: '臉型', list: () => (g() === 'm' ? [{ id: 'orig', name: '原本', img: 'parts/head.png' }] : [])
-        .concat(Object.entries(LIB.head || {}).filter(([k]) => k.startsWith(g() + '_')).map(([k, v]) => ({ id: k, name: v.name, img: v.file }))) },
+        .concat(Object.entries(LIB.head || {}).filter(([k]) => k.startsWith(g() + '_'))
+          .sort((a, b) => (b[1].sheet > a[1].sheet) - (b[1].sheet < a[1].sheet))     // 新的大臉頭型排前面
+          .map(([k, v]) => ({ id: k, name: v.name, img: v.file }))) },
     { key: 'face', name: '五官', list: () => (g() === 'm' ? [{ id: 'orig', name: '原本', img: 'parts/face_smug.png' }] : [])
         .concat(Object.entries(LIB['face_' + g()] || {}).map(([k, v]) => ({ id: k, name: v.name, img: v.smug && v.smug.file }))) },
     { key: 'body', name: '體型', list: () => (g() === 'm' ? [{ id: 'orig', name: '原本', img: 'parts/torso.png' }] : [])
@@ -84,7 +86,7 @@
     const id = it.dataset.id === '' ? null : it.dataset.id;
     AV.set({ [curCat]: id }).then(drawGrid); drawGrid();
   });
-  const FDEF = { hair: 'longbangs', face: 'lashes', head: 'f_oval', body: 'std', beardUp: null, beardLow: null, beardSide: null, beardUnder: null };
+  const FDEF = { hair: 'longbangs', face: 'lashes', head: 'f_oval2', body: 'std', beardUp: null, beardLow: null, beardSide: null, beardUnder: null };
   const MDEF = { hair: 'orig', face: 'orig', head: 'orig', body: 'orig' };
   panel.querySelectorAll('[data-g]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.g === g()) return;

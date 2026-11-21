@@ -313,8 +313,8 @@ window.AVATAR = (() => {
           let Txx = Tx;
           for (let it = 0; it < 3; it++) {
             const hh = eb.h * kk, vw = (eb.w + 2 * g) * kk;
-            const [L, R] = faceSpan(faceY + Ty - hh * 0.35, faceY + Ty + hh / 2);   // 眉毛上緣可以碰到頭髮，從眼睛那幾排開始算
-            const allow = (R - L) * 0.9;
+            const [L, R] = faceSpan(faceY + Ty - hh * 0.2, faceY + Ty + hh * 0.25);   // 只看眼睛中段那幾排（下睫毛不算）
+            const allow = (R - L) * 0.95;
             if (vw > allow && allow > 0) { const f = allow / vw; kk *= f; if (g > 0) g = Math.round(g * f); }
             const half = (eb.w + 2 * g) * kk / 2, mid = (L + R) / 2 - G.cx;
             Txx = R - L > 20 ? Math.max(mid - (R - L) * 0.45 + half, Math.min(mid + (R - L) * 0.45 - half, Tx)) : Tx;

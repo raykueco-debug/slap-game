@@ -69,11 +69,20 @@ window.FACEMATCH = (() => {
     },
   };
   // wr＝臉寬/臉長、jaw＝下顎寬/顴骨寬
+  // 臉型（只用大臉的新頭型）：wr＝臉寬/臉長、jaw＝下顎寬/顴骨寬、full＝飽滿度（胖瘦）
   const HEAD_TAG = {
-    m_round: { wr: .95, jaw: .85 }, m_oval: { wr: .8, jaw: .75 }, m_long: { wr: .7, jaw: .75 }, m_square: { wr: .88, jaw: .95 },
-    m_wide: { wr: 1.02, jaw: .85 }, m_pointed: { wr: .82, jaw: .6 }, m_ears: { wr: .85, jaw: .8 }, m_jaw: { wr: .9, jaw: 1 },
-    f_round: { wr: .95, jaw: .85 }, f_oval: { wr: .8, jaw: .75 }, f_long: { wr: .7, jaw: .72 }, f_v: { wr: .78, jaw: .6 },
-    f_heart: { wr: .85, jaw: .62 }, f_wide: { wr: 1, jaw: .85 }, f_pointed: { wr: .8, jaw: .58 }, f_chubby: { wr: .98, jaw: .92 },
+    m_chubby: { wr: .86, jaw: .85, full: .38 }, m_fat: { wr: .88, jaw: .9, full: .5 }, m_jowl: { wr: .86, jaw: .93, full: .44 },
+    m_fatsquare: { wr: .86, jaw: .95, full: .3 }, m_baby: { wr: .84, jaw: .82, full: .24 }, m_oval2: { wr: .79, jaw: .8, full: 0 },
+    m_narrow: { wr: .72, jaw: .78, full: -.15 }, m_bony: { wr: .75, jaw: .76, full: -.22 }, m_strongjaw: { wr: .8, jaw: .9, full: .05 },
+    m_triangle: { wr: .78, jaw: .93, full: .12 }, m_invtri: { wr: .78, jaw: .7, full: -.1 }, m_diamond: { wr: .77, jaw: .74, full: -.05 },
+    m_rect: { wr: .74, jaw: .86, full: -.05 }, m_egg: { wr: .8, jaw: .76, full: .04 }, m_puffy: { wr: .83, jaw: .78, full: .2 },
+    m_flat: { wr: .9, jaw: .88, full: .22 },
+    f_chubby2: { wr: .88, jaw: .85, full: .38 }, f_plump: { wr: .88, jaw: .88, full: .48 }, f_baby: { wr: .86, jaw: .8, full: .26 },
+    f_wide2: { wr: .92, jaw: .84, full: .3 }, f_oval2: { wr: .8, jaw: .78, full: 0 }, f_long2: { wr: .73, jaw: .78, full: -.12 },
+    f_v2: { wr: .8, jaw: .68, full: -.12 }, f_heart2: { wr: .82, jaw: .7, full: -.05 }, f_square: { wr: .82, jaw: .9, full: .08 },
+    f_diamond: { wr: .78, jaw: .74, full: -.06 }, f_pear: { wr: .8, jaw: .92, full: .15 }, f_egg: { wr: .8, jaw: .75, full: .03 },
+    f_puffy: { wr: .84, jaw: .74, full: .2 }, f_thin: { wr: .75, jaw: .76, full: -.22 }, f_short: { wr: .95, jaw: .86, full: .2 },
+    f_point: { wr: .83, jaw: .7, full: .1 },
   };
 
   // ---------- 量測 ----------
@@ -206,7 +215,9 @@ window.FACEMATCH = (() => {
     const ff = { ar: (arL + arR) / 2, tilt: Math.max(-1, Math.min(1, (tiltL + tiltR) / 2 * 6)), size: Math.min(1, (d(33, 133) + d(263, 362)) / 2 / faceW * 4 - 0.3),
                  uneven: Math.min(1, Math.abs(arL - arR) * 8), lips: lipTh > 0.11 ? 1 : lipTh < 0.06 ? -1 : 0 };
     // 頭型
-    const hf = { wr: faceW / faceH, jaw: d(172, 397) / faceW };
+    // 胖瘦：嘴角高度的臉寬、下顎寬，都跟顴骨寬比
+    const hf = { wr: faceW / faceH, jaw: d(172, 397) / faceW, mid: d(132, 361) / faceW, low: d(136, 365) / faceW };
+    hf.full = (hf.wr - 0.78) * 2 + (hf.mid - 0.95) * 4 + (hf.low - 0.72) * 3;     // 飽滿度：越大越胖圓
 
     // ---------- 本人五官比例（含額頭）----------
     // 髮際線：眉心正上方往上找，第一個不是臉皮膚的點（頭髮或背景）；找不到就估 mesh 頂再往上 0.25 臉長
@@ -303,7 +314,7 @@ window.FACEMATCH = (() => {
       hairColor: hairColorPick(hairRGB),
       hair: feat.bald ? 'bald' : nearest(HAIR_TAG[hairCat], feat, { fr: 3, len: 2, vol: 1.5, wid: 1, asym: 1, bald: 2 }),
       face: nearest(FACE_TAG[faceCat], ff, { ar: 30, tilt: 2, size: 2, uneven: 1, lips: .5 }),
-      head: nearest(Object.fromEntries(Object.entries(HEAD_TAG).filter(([k]) => k.startsWith(g + '_'))), hf, { wr: 10, jaw: 6 }),
+      head: nearest(Object.fromEntries(Object.entries(HEAD_TAG).filter(([k]) => k.startsWith(g + '_'))), hf, { wr: 8, jaw: 6, full: 10 }),
       glasses, prop, ...(beard || {}),
     };
     // 只挑造型庫裡真的有的

@@ -143,18 +143,28 @@ def head_geo(im):
     # 臉輪廓：每個高度從中線往外掃，碰到描邊（暗）或透明就是臉邊界；耳朵在描邊外面不算
     px = im.load()
     def edge(yy, step):
+        # 碰到暗線時往外看 10px：後面是透明才是真的輪廓；後面還是皮膚＝臉上的線（雙下巴皺褶等），繼續掃
         x = int(cx)
         while 0 <= x < W:
             r, g, b, a = px[x, yy]
-            if a <= TH or (0.3 * r + 0.59 * g + 0.11 * b) < 90:
+            if a <= TH:
                 return x
+            if (0.3 * r + 0.59 * g + 0.11 * b) < 90:
+                ahead = [px[x + step * k, yy][3] for k in range(1, 11) if 0 <= x + step * k < W]
+                if not ahead or min(ahead) <= TH:
+                    return x
             x += step
         return x
     prof = []
     for k in range(25):
         yy = int(top + 4 + (chin - top - 4) * k / 24)
         prof.append([yy, edge(yy, -1), edge(yy, 1)])
-    return {'top': top, 'chin': chin, 'sw': best[0], 'cx': cx, 'W': W, 'H': H, 'prof': prof}
+    # 平滑：每排取上下各 2 排中最窄（濾掉耳朵這種局部凸出）
+    sm = []
+    for i, (yy, l, r) in enumerate(prof):
+        win = prof[max(0, i - 2):i + 3]
+        sm.append([yy, max(p[1] for p in win), min(p[2] for p in win)])
+    return {'top': top, 'chin': chin, 'sw': best[0], 'cx': cx, 'W': W, 'H': H, 'prof': sm}
 
 
 def main():
@@ -182,6 +192,10 @@ def main():
         scales['acc'] = scales.get('face', 1.0)
     print('比例', {k: round(v, 3) for k, v in scales.items()})
     hcy, hcx, head_r0 = fit_anchor(o_head)
+    hs = {}
+    for v in man.get('head', {}).values():
+        hs.setdefault(v['sheet'], []).append(v['w'])
+    head_sheet_scale = {k: o_head.width / sorted(ws)[len(ws) // 2] for k, ws in hs.items()}
     fix = json.load(open(os.path.join(ROOT, 'lib', 'fix.json'), encoding='utf-8'))
 
     # 每張表各自的比例：用頭殼弧半徑換算（取該表所有前髮的中位數）
@@ -229,7 +243,7 @@ def main():
                     else:
                         e[layer].pop('eyes', None); e[layer].pop('mouth', None)
             if cat == 'head':
-                e['scale'] = scales['head']         # 整張表同一比例；頭頂對齊原頭頭頂（avatar.js）
+                e['scale'] = head_sheet_scale.get(e['sheet'], scales['head'])   # 每張表各自比例；頭頂對齊原頭頭頂（avatar.js）
                 e['geo'] = head_geo(Image.open(os.path.join(ROOT, e['file'])))
             if cat == 'acc':
                 e['scale'] = scales['acc']

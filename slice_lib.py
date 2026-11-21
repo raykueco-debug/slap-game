@@ -70,6 +70,16 @@ SHEETS = {
         ('low_stubble', '下巴鬍渣'), ('low_boxed', '方下巴鬍'), ('low_anchor', '錨形下巴鬍'), ('low_ducktail', '鴨尾下巴鬍'),
         ('side_stubble', '鰓邊鬍渣'), ('side_heavystubble', '鰓邊濃鬍渣'), ('side_sideburn', '長鬢角'), ('side_curly', '捲鰓鬍'),
         ('under_neck', '脖子鬍'), ('under_garibaldi', '圓大頷下鬍'), ('under_ducktail', '尖頷下鬍'), ('under_wizard', '超長鬍')]],
+    'HEAD-M2': [('head', i, n, None) for i, n in [
+        ('m_chubby', '圓胖臉'), ('m_fat', '雙下巴'), ('m_jowl', '寬垂頰'), ('m_fatsquare', '胖方臉'),
+        ('m_baby', '娃娃臉'), ('m_oval2', '鵝蛋臉'), ('m_narrow', '窄長臉'), ('m_bony', '瘦削臉'),
+        ('m_strongjaw', '方下顎'), ('m_triangle', '三角臉'), ('m_invtri', '倒三角臉'), ('m_diamond', '菱形臉'),
+        ('m_rect', '長方臉'), ('m_egg', '蛋形臉'), ('m_puffy', '鼓頰臉'), ('m_flat', '大寬臉')]],
+    'HEAD-F2': [('head', i, n, None) for i, n in [
+        ('f_chubby2', '圓胖臉'), ('f_plump', '豐腴雙下巴'), ('f_baby', '娃娃臉'), ('f_wide2', '寬頰臉'),
+        ('f_oval2', '鵝蛋臉'), ('f_long2', '長臉'), ('f_v2', 'V 臉'), ('f_heart2', '心形臉'),
+        ('f_square', '柔方臉'), ('f_diamond', '菱形臉'), ('f_pear', '梨形臉'), ('f_egg', '蛋形臉'),
+        ('f_puffy', '鼓頰小下巴'), ('f_thin', '瘦削臉'), ('f_short', '短寬臉'), ('f_point', '尖下巴飽頰')]],
 }
 def body(cat, items):
     out = []
