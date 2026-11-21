@@ -257,10 +257,10 @@ def main():
         ws = sorted(bz.get(e['sheet'], [e['w']]))
         e['k'] = 88.0 / ws[len(ws) // 2]
 
-    # ---------- 鼻子：每張表一個比例（圓鈕鼻寬 ≈ 18 單位）----------
+    # ---------- 鼻子：每張表一個比例（圓鈕鼻寬 ≈ 26 單位）----------
     for iid, e in man.get('nose', {}).items():
         ref = man['nose'].get('button', e)
-        e['k'] = 18.0 / ref['w']
+        e['k'] = 26.0 / ref['w']
 
     # ---------- 身體：上衣去袖＋拆前領層；整張表比例以原上衣（含袖）寬換算 ----------
     sys.path.insert(0, ROOT)

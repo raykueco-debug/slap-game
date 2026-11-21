@@ -214,29 +214,34 @@ window.AVATAR = (() => {
   // 鼻子：放在眼睛下緣與嘴巴上緣之間（t＝0 貼眼睛、1 貼嘴巴，預設 0.5），像素級不碰眼睛眉毛與嘴巴；放不下就縮小
   function placeNose(p, im, k, x, t) {
     const mo = p.mouth, W0 = im.naturalWidth || im.width, H0 = im.naturalHeight || im.height;
-    const EY = dilate(eyesMaskOf(p), GAP), low = eyeLowProfile(p), my0 = mo.y;
+    const my0 = mo.y, ay0 = p.ay, hImg = p.w * p.im.naturalHeight / p.im.naturalWidth;
     const tt = t == null ? 0.5 : Math.max(0, Math.min(1, t));
-    // 先試原尺寸～80%；放不下就把嘴巴往下巴移（每次 2），嘴巴到底了才繼續縮鼻子
+    let EY, low;
+    const eyesAt = up => { p.ay = ay0 + up / hImg; EY = dilate(eyesMaskOf(p), GAP); low = eyeLowProfile(p); };
     const tryAt = scales => {
       const MM = dilate(alphaMask(c => c.drawImage(mo.im, mo.x - mo.w / 2, mo.y - mo.h / 2, mo.w, mo.h)), GAP), E = new Uint8Array(EY.length);
       for (let i = 0; i < E.length; i++) E[i] = EY[i] | MM[i];
-      return fit(E, scales);
+      for (const s of scales) {
+        const w = W0 * k * s, h = H0 * k * s, n = { im, w, h, x };
+        const pts = mouthPixels(n);
+        const yA = Math.max(low.at(x - w / 2, x + w / 2), mo.y - 120) + GAP + h / 2, yB = mo.y - mo.h / 2 - GAP - h / 2;
+        const y0 = yA + (yB - yA) * tt;
+        // 從目標高度往上下交錯找最近的不碰位置；只准在眼睛與嘴巴之間
+        for (let d = 0; d <= Math.max(8, Math.abs(yB - yA) + h); d++) for (const y of d ? [y0 + d, y0 - d] : [y0])
+          if (y >= yA - h * 0.3 && y <= yB + h * 0.3 && !hits(E, pts, x, y)) { n.y = y; return n; }
+      }
+      return null;
     };
-    const fit = (E, scales) => { for (const s of scales) {
-      const w = W0 * k * s, h = H0 * k * s, n = { im, w, h, x };
-      const pts = mouthPixels(n);
-      const yA = low.at(x - w / 2, x + w / 2) + GAP + h / 2, yB = mo.y - mo.h / 2 - GAP - h / 2;
-      const y0 = yA + (yB - yA) * tt;
-      // 從目標高度往上下交錯找最近的不碰位置
-      for (let d = 0; d <= Math.max(8, Math.abs(yB - yA) + h); d++) for (const y of d ? [y0 + d, y0 - d] : [y0])
-        if (y >= yA - h * 0.3 && y <= yB + h * 0.3 && !hits(E, pts, x, y)) { n.y = y; return n; }   // 只准在眼睛與嘴巴之間
-    } return null; };
-    for (let dy = 0; my0 + dy <= Math.max(my0, mo.maxY == null ? my0 : mo.maxY); dy += 2) {
-      mo.y = my0 + dy;
-      const n = tryAt([1, 0.9, 0.8]); if (n) return n;
+    // 鼻子盡量保持原尺寸：先把嘴巴往下巴移，再把眼睛往上抬（最多 18），都不夠才縮小鼻子
+    for (let up = 0; up <= 18; up += 3) {
+      eyesAt(up);
+      for (let dy = 0; my0 + dy <= Math.max(my0, mo.maxY == null ? my0 : mo.maxY); dy += 2) {
+        mo.y = my0 + dy;
+        const n = tryAt([1, 0.9, 0.8]); if (n) return n;
+      }
     }
-    mo.y = my0;
-    return tryAt([0.7, 0.6, 0.5, 0.42, 0.35]);
+    mo.y = my0; eyesAt(0);
+    return tryAt([0.7, 0.6, 0.5, 0.42, 0.35, 0.28, 0.22]);
   }
   // 眼睛在每個 x 的最低點（face 座標）；八字鬍頂部不能高過這條線
   function eyeLowProfile(p) {
@@ -386,6 +391,7 @@ window.AVATAR = (() => {
           }
           p.eyeLow = eyeLowProfile(p);                               // 眼睛實際最低點（八字鬍用）
           p.nose = nimc && p.mouth ? placeNose(p, nimc, ne.k * SF * Math.min(1.15, sv) * (pr.noseScale || 1), Txx, pr.noseY) : null;
+          if (p.nose) p.eyeLow = eyeLowProfile(p);                  // 眼睛可能被抬高了，重算
         }
       };
     })());
