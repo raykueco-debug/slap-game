@@ -336,6 +336,9 @@ function render() {
   const order = ko && (ko.phase === 'beg' || ko.phase === 'land')
     ? ORDER.filter(k => !['hairBack', 'head', 'face', 'faceHurt', 'hairFront'].includes(k)).concat(['hairBack', 'head', 'hairFront', 'face', 'faceHurt'])
     : ORDER;
+  const PH = window.AVATAR && AVATAR.photo && AVATAR.photo();
+  if (PH && PH.show && !ko) { ctx.save(); applyChain('head'); AVATAR.drawPhoto(ctx); ctx.restore(); }
+  if (PH && PH.show && !ko) ctx.globalAlpha = PH.alpha;          // 有底圖時人物半透明，好對照
   if (!spr) for (const key of order) {
     if (key === 'face' && hurt) continue;
     if (key === 'faceHurt' && !hurt) continue;
@@ -346,6 +349,7 @@ function render() {
     if (EDIT) { ctx.fillStyle = key === sel ? '#f00' : '#0a0'; circ(0, 0, key === sel ? 7 : 4); ctx.fill(); }
     ctx.restore();
   }
+  ctx.globalAlpha = 1;
   ctx.restore();
 
   // 滑動軌跡
@@ -613,9 +617,33 @@ function hitChar(x, y) {
   return Math.abs(x - cx) < 115 * S && y > RY + L.neckY * S && y < RY + L.feet * S;   // 身體
 }
 
+// ---------- 調整模式（造型面板開「調整」）：單指拖＝移動、雙指捏／滾輪＝縮放；不打人 ----------
+const adjP = new Map();
+const adjOn = () => window.AV_ADJUST && window.AVATAR;
+function adjDown(e) { adjP.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { cv.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); }
+function adjMove(e) {
+  const q = adjP.get(e.pointerId); if (!q) return;
+  const id = window.AV_ADJ_TARGET;
+  if (adjP.size >= 2) {
+    const [a, b] = [...adjP.values()], d0 = Math.hypot(a.x - b.x, a.y - b.y);
+    q.x = e.clientX; q.y = e.clientY;
+    const d1 = Math.hypot(a.x - b.x, a.y - b.y);
+    if (d0 > 10) AVATAR.adjust(id, 0, 0, d1 / d0);
+    return;
+  }
+  AVATAR.adjust(id, (e.clientX - q.x) / S, (e.clientY - q.y) / S, 1);
+  q.x = e.clientX; q.y = e.clientY;
+}
+cv.addEventListener('wheel', e => {
+  if (!adjOn()) return;
+  e.preventDefault();
+  AVATAR.adjust(window.AV_ADJ_TARGET, 0, 0, Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+
 // ---------- 輸入（多指） ----------
 const gest = new Map();
 cv.addEventListener('pointerdown', e => {
+  if (adjOn()) return adjDown(e);
   initAudio();
   gest.set(e.pointerId, { x0: e.clientX, y0: e.clientY, t0: performance.now(), slapped: false, lx: e.clientX, ly: e.clientY, touched: hitChar(e.clientX, e.clientY) });
   trails.set(e.pointerId, [{ x: e.clientX, y: e.clientY, life: 0.25 }]);
@@ -623,6 +651,7 @@ cv.addEventListener('pointerdown', e => {
   e.preventDefault();
 });
 cv.addEventListener('pointermove', e => {
+  if (adjP.size) return adjMove(e);
   const g = gest.get(e.pointerId); if (!g) return;
   const tr = trails.get(e.pointerId); if (tr) { tr.push({ x: e.clientX, y: e.clientY, life: 0.25 }); if (tr.length > 20) tr.shift(); }
   if (EDIT) { editDrag(e.clientX - g.lx, e.clientY - g.ly); g.lx = e.clientX; g.ly = e.clientY; return; }
@@ -649,6 +678,7 @@ cv.addEventListener('pointermove', e => {
   }
 });
 function endPointer(e) {
+  if (adjP.delete(e.pointerId)) return;
   const g = gest.get(e.pointerId); if (!g) return;
   gest.delete(e.pointerId);
   setTimeout(() => trails.delete(e.pointerId), 300);
@@ -657,7 +687,7 @@ function endPointer(e) {
   if (d < 25 && performance.now() - g.t0 < 500 && hitChar(e.clientX, e.clientY)) punch(e.clientX, e.clientY);
 }
 cv.addEventListener('pointerup', endPointer);
-cv.addEventListener('pointercancel', e => { gest.delete(e.pointerId); trails.delete(e.pointerId); });
+cv.addEventListener('pointercancel', e => { adjP.delete(e.pointerId); gest.delete(e.pointerId); trails.delete(e.pointerId); });
 document.addEventListener('gesturestart', e => e.preventDefault());
 
 // ---------- 編輯模式（?edit）：選部件、拖曳對位、輸出設定 ----------

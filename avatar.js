@@ -44,7 +44,7 @@ window.AVATAR = (() => {
   // 鬍子拆四個部位：唇上／唇下／鰓邊／頷下，各自定位，嘴巴永遠在唇上與唇下之間
   const BEARD_SLOTS = ['beardUp', 'beardLow', 'beardSide', 'beardUnder'];
   const DEF = { prop: null, gender: 'm', head: 'orig', hair: 'orig', face: 'orig', body: 'orig', skin: 'orig', hairColor: 'black',
-                nose: null, glasses: null, beardUp: null, beardLow: null, beardSide: null, beardUnder: null, hat: null, ear: null, neck: null, mark: null, faceW: 1 };
+                nose: null, glasses: null, beardUp: null, beardLow: null, beardSide: null, beardUnder: null, hat: null, ear: null, neck: null, mark: null, faceW: 1, adj: {} };
   const KEY = 'slap_avatar_v2';
   let cur = Object.assign({}, DEF);
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) Object.assign(cur, s); } catch (_) {}
@@ -158,6 +158,34 @@ window.AVATAR = (() => {
     return { top: Y(g.top), chin: Y(g.chin), sw: g.sw * k, cx: X(g.cx), prof: (g.prof || []).map(r => [Y(r[0]), X(r[1]), X(r[2])]) };
   }
   const mapY = y => G.top + (y - G0.top) * SH;          // 原頭上的高度 → 目前這顆頭
+
+  // ---------- 調整模式：各部件手動位移／縮放（cur.adj[id] = {dx, dy, s}，單位＝部件座標）----------
+  function adjAround(ctx, id, cx, cy) {
+    const a = cur.adj && cur.adj[id]; if (!a) return;
+    ctx.translate(cx + (a.dx || 0), cy + (a.dy || 0)); ctx.scale(a.s || 1, a.s || 1); ctx.translate(-cx, -cy);
+  }
+  function adjInv(ctx, id, cx, cy) {                // adjAround 的反向（畫完眼睛後還原，給嘴巴、鼻子用）
+    const a = cur.adj && cur.adj[id]; if (!a) return;
+    ctx.translate(cx, cy); ctx.scale(1 / (a.s || 1), 1 / (a.s || 1)); ctx.translate(-cx - (a.dx || 0), -cy - (a.dy || 0));
+  }
+  function adjust(id, dx, dy, ks) {
+    if (!id) return;
+    const adj = Object.assign({}, cur.adj || {}), a = Object.assign({ dx: 0, dy: 0, s: 1 }, adj[id]);
+    a.dx += dx; a.dy += dy; a.s = Math.max(0.3, Math.min(3, a.s * ks));
+    adj[id] = a; cur.adj = adj;
+    clearTimeout(adjust.t); adjust.t = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(cur)); } catch (_) {} }, 300);
+  }
+  // 參考照片底圖（只在記憶體）
+  let PHOTO = null;
+  function drawPhoto(ctx) {                          // 在 head 座標裡畫：照片的臉寬對頭的臉寬、下巴對下巴
+    if (!PHOTO || !PHOTO.show || !G) return;
+    const ph = PHOTO.ph, [L, R] = faceSpan(G.chin - (G.chin - G.top) * 0.45, G.chin - (G.chin - G.top) * 0.45);
+    const k = (R - L) / ph.w, cx = (L + R) / 2;
+    ctx.save(); ctx.globalAlpha = 1;
+    adjAround(ctx, 'photo', cx, G.chin);
+    ctx.drawImage(ph.cv, cx - ph.cx * k, G.chin - ph.chin * k, ph.cv.width * k, ph.cv.height * k);
+    ctx.restore();
+  }
 
   // ---------- 五官不互觸（像素級）----------
   // 遮罩：face 座標 1 單位＝1 px，範圍 ±R
@@ -362,8 +390,9 @@ window.AVATAR = (() => {
           cx.drawImage(im, xs, 0, W0 - xs, H0, off + g + xs, 0, W0 - xs, H0);
           c.naturalWidth = c.width; c.naturalHeight = c.height;
           const pcx = off + W0 / 2 + eb.cx, pcy = H0 / 2 + eb.cy;
-          p.im = c; p.halo = makeHalo(c, Math.max(3, Math.round(4 / kk))); p.w = c.width * kk; p.ax = (pcx * kk - Txx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
+          p.im = c; p.halo = null; p.w = c.width * kk; p.ax = (pcx * kk - Txx) / p.w; p.ay = (pcy * kk - Ty) / (H0 * kk);
           const eyeBottom = Ty + eb.h * kk / 2;                      // face 座標
+          p.eyeC = [Txx, Ty];
           p.eyeBottom = eyeBottom; p.eyeMid = Ty + eb.h * kk * 0.22;   // 眼睛中線略下（眉毛在眼睛區上方）
           p.x = G.cx; p.y = faceY;
           // 嘴巴：定稿嘴位；大小＝定稿嘴寬 ×（此款嘴/眼睛區 比上 定稿嘴/眼睛區，限 0.85~1.15）× 照片嘴大小
@@ -461,7 +490,7 @@ window.AVATAR = (() => {
     const mTop = m.y - m.h / 2, mBot = m.y + m.h / 2, chinL = G.chin - P[key].y;
     // 頷下：頂部塞進下巴下面
     let b = cur.beardUnder && B(cur.beardUnder);
-    if (b) { const w = b.W * b.k, h = b.H * b.k; ctx.drawImage(b.im, -w / 2 + (m.x * 0.3), chinL - h * 0.12, w, h); }
+    if (b) { const w = b.W * b.k, h = b.H * b.k; ctx.save(); adjAround(ctx, 'beardUnder', m.x * 0.3, chinL + h * 0.38); ctx.drawImage(b.im, -w / 2 + (m.x * 0.3), chinL - h * 0.12, w, h); ctx.restore(); }
     // 鰓邊：左右各半，外緣貼臉輪廓；從顴骨高度到下巴
     b = cur.beardSide && B(cur.beardSide);
     if (b) {
@@ -471,12 +500,14 @@ window.AVATAR = (() => {
       const [L, R] = faceSpan(P[key].y + ymid, P[key].y + ymid);
       const sc = hh / b.H, w = half * sc;
       const xl = L - P[key].x, xr = R - P[key].x;
+      ctx.save(); adjAround(ctx, 'beardSide', (xl + xr) / 2, yTop + hh / 2);
       ctx.drawImage(b.im, 0, 0, half, b.H, xl - w * 0.12, yTop, w, hh);
       ctx.drawImage(b.im, half, 0, half, b.H, xr - w * 0.88, yTop, w, hh);
+      ctx.restore();
     }
     // 唇下：頂部接嘴巴下緣
     b = cur.beardLow && B(cur.beardLow);
-    if (b) { const w = b.W * b.k, h = b.H * b.k; ctx.drawImage(b.im, m.x - w / 2, mBot - h * 0.06, w, h); }
+    if (b) { const w = b.W * b.k, h = b.H * b.k; ctx.save(); adjAround(ctx, 'beardLow', m.x, mBot + h * 0.44); ctx.drawImage(b.im, m.x - w / 2, mBot - h * 0.06, w, h); ctx.restore(); }
     // 唇上：底部壓嘴巴上緣
     b = cur.beardUp && B(cur.beardUp);
     if (b) {
@@ -488,7 +519,7 @@ window.AVATAR = (() => {
       const eyeLow = P[key].eyeLow ? P[key].eyeLow.at(m.x - w / 2, m.x + w / 2) : (P[key].eyeMid == null ? base - 30 : P[key].eyeMid);
       const room = Math.max(4, base - eyeLow - GAP);
       if (ay * h > room) { const sq = Math.max(0.6, room / (ay * h)); h *= sq; if (ay * h > room) { const f = room / (ay * h); h *= f; w *= f; } }
-      ctx.drawImage(b.im, m.x - w / 2, base - ay * h, w, h);
+      ctx.save(); adjAround(ctx, 'beardUp', m.x, base - ay * h / 2); ctx.drawImage(b.im, m.x - w / 2, base - ay * h, w, h); ctx.restore();
     }
   }
   function drawAcc(ctx, id, under) {
@@ -497,6 +528,8 @@ window.AVATAR = (() => {
     ctx.save();
     if (pos.space === 'face') ctx.scale(SF, SF);                                   // 跟著五官縮放
     if (pos.space === 'head') { ctx.translate(G.cx, G.top - G0.top * SH); ctx.scale(SH, SH); }  // 跟著頭縮放
+    const slot = SLOTS.find(s => cur[s] === id);
+    if (slot) adjAround(ctx, slot, pos.x || 0, pos.y || 0);
     drawAccRaw(ctx, pos, im);
     ctx.restore();
   }
@@ -519,18 +552,21 @@ window.AVATAR = (() => {
       const clipY = G.chin - (G0.chin - CLIP_Y) * SH;
       ctx.beginPath(); ctx.rect(-2000, -2000, 4000, 2000 + (clipY - p.y)); ctx.clip();
     }
-    if ((key === 'face' || key === 'faceHurt') && p.halo && p.ok) {      // 眼睛膚色底（在鬍子、五官之下）
-      const w = p.w, h = w * p.im.naturalHeight / p.im.naturalWidth; ctx.drawImage(p.halo, -p.ax * w, -p.ay * h, w, h);
+    if ((key === 'hairFront' || key === 'hairBack') && G) adjAround(ctx, 'hair', G.cx - p.x, mapY(-118) - p.y);
+    if (key === 'head' && p.ok) { const w = p.w || 0, h = w * p.im.naturalHeight / p.im.naturalWidth; adjAround(ctx, 'head', (0.5 - p.ax) * w, (0.5 - p.ay) * h); }
+    if (key === 'face' || key === 'faceHurt') {
+      drawBeard(ctx, key); for (const id of accIn('face')) drawAcc(ctx, id, true);
+      if (p.eyeC) adjAround(ctx, 'eyes', p.eyeC[0], p.eyeC[1]);          // 眼睛（臉圖本身）跟著調整
     }
-    if (key === 'face' || key === 'faceHurt') { drawBeard(ctx, key); for (const id of accIn('face')) drawAcc(ctx, id, true); }
     return true;
   }
   function afterPart(key, ctx) {
+    if ((key === 'face' || key === 'faceHurt') && P[key].eyeC) adjInv(ctx, 'eyes', P[key].eyeC[0], P[key].eyeC[1]);
     if ((key === 'face' || key === 'faceHurt') && P[key].nose) {
-      const n = P[key].nose; ctx.drawImage(n.im, n.x - n.w / 2, n.y - n.h / 2, n.w, n.h);
+      const n = P[key].nose; ctx.save(); adjAround(ctx, 'nose', n.x, n.y); ctx.drawImage(n.im, n.x - n.w / 2, n.y - n.h / 2, n.w, n.h); ctx.restore();
     }
     if ((key === 'face' || key === 'faceHurt') && P[key].mouth) {
-      const m = P[key].mouth; ctx.drawImage(m.im, m.x - m.w / 2, m.y - m.h / 2, m.w, m.h);
+      const m = P[key].mouth; ctx.save(); adjAround(ctx, 'mouth', m.x, m.y); ctx.drawImage(m.im, m.x - m.w / 2, m.y - m.h / 2, m.w, m.h); ctx.restore();
     }
     if (key === 'face' || key === 'faceHurt') for (const id of accIn('face')) drawAcc(ctx, id, false);
     if (key === 'hairFront' || (key === 'hairBack' && P.hairFront.hidden)) {
@@ -545,6 +581,10 @@ window.AVATAR = (() => {
     LIB, SKIN, HAIRC, ACC_POS, SLOTS, DEF,
     get: () => Object.assign({}, cur), set, attach, apply,
     beforePart, afterPart, headTopOffset,
+    adjust, drawPhoto,
+    setPhoto: ph => { PHOTO = ph ? { ph, show: true, alpha: PHOTO ? PHOTO.alpha : 0.6 } : null; },
+    photo: () => PHOTO,
+    resetAdj: id => { const adj = Object.assign({}, cur.adj || {}); if (id) delete adj[id]; else for (const k in adj) delete adj[k]; cur.adj = adj; try { localStorage.setItem(KEY, JSON.stringify(cur)); } catch (_) {} },
     headW: () => cur.faceW || 1,
     dims: () => Object.assign({}, DIM),
     // 檢查用：目前五官（囂張／被打）嘴巴是否還碰到眼睛眉毛（0＝不碰；同時回報離眼睛最近的距離）

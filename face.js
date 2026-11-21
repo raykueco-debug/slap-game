@@ -411,7 +411,8 @@ window.FACEMATCH = (() => {
     if (pick.hair !== 'bald' && !(LIB[hairCat] && LIB[hairCat][pick.hair])) delete pick.hair;
     if (!(LIB[faceCat] && LIB[faceCat][pick.face])) delete pick.face;
     if (!(LIB.head && LIB.head[pick.head])) delete pick.head;
-    return { pick, debug: { raw, prop, nf, feat, ff, hf, hairArea: +hairArea.toFixed(2), sideCov: +sideCov.toFixed(2), belowCov: +belowCov.toFixed(2), topArea: +topArea.toFixed(3), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
+    const photo = { cv, cx: (fx0 + fx1) / 2, w: fx1 - fx0, top, chin, eyeY };   // 調整模式的底圖（只在記憶體，不存）
+    return { pick, photo, debug: { raw, prop, nf, feat, ff, hf, hairArea: +hairArea.toFixed(2), sideCov: +sideCov.toFixed(2), belowCov: +belowCov.toFixed(2), topArea: +topArea.toFixed(3), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
   }
   return { analyze, HAIR_TAG, FACE_TAG, HEAD_TAG };
 })();
