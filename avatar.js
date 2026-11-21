@@ -44,7 +44,7 @@ window.AVATAR = (() => {
   // 鬍子拆四個部位：唇上／唇下／鰓邊／頷下，各自定位，嘴巴永遠在唇上與唇下之間
   const BEARD_SLOTS = ['beardUp', 'beardLow', 'beardSide', 'beardUnder'];
   const DEF = { prop: null, gender: 'm', head: 'orig', hair: 'orig', face: 'orig', body: 'orig', skin: 'orig', hairColor: 'black',
-                glasses: null, beardUp: null, beardLow: null, beardSide: null, beardUnder: null, hat: null, ear: null, neck: null, mark: null, faceW: 1 };
+                nose: null, glasses: null, beardUp: null, beardLow: null, beardSide: null, beardUnder: null, hat: null, ear: null, neck: null, mark: null, faceW: 1 };
   const KEY = 'slap_avatar_v2';
   let cur = Object.assign({}, DEF);
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) Object.assign(cur, s); } catch (_) {}
@@ -211,6 +211,33 @@ window.AVATAR = (() => {
     p.ay = ay0; mo.w = w0; mo.h = h0; mo.y = y0;          // 找不到解就維持原樣（之後掃描會列出來）
     return false;
   }
+  // 鼻子：放在眼睛下緣與嘴巴上緣之間（t＝0 貼眼睛、1 貼嘴巴，預設 0.5），像素級不碰眼睛眉毛與嘴巴；放不下就縮小
+  function placeNose(p, im, k, x, t) {
+    const mo = p.mouth, W0 = im.naturalWidth || im.width, H0 = im.naturalHeight || im.height;
+    const EY = dilate(eyesMaskOf(p), GAP), low = eyeLowProfile(p), my0 = mo.y;
+    const tt = t == null ? 0.5 : Math.max(0, Math.min(1, t));
+    // 先試原尺寸～80%；放不下就把嘴巴往下巴移（每次 2），嘴巴到底了才繼續縮鼻子
+    const tryAt = scales => {
+      const MM = dilate(alphaMask(c => c.drawImage(mo.im, mo.x - mo.w / 2, mo.y - mo.h / 2, mo.w, mo.h)), GAP), E = new Uint8Array(EY.length);
+      for (let i = 0; i < E.length; i++) E[i] = EY[i] | MM[i];
+      return fit(E, scales);
+    };
+    const fit = (E, scales) => { for (const s of scales) {
+      const w = W0 * k * s, h = H0 * k * s, n = { im, w, h, x };
+      const pts = mouthPixels(n);
+      const yA = low.at(x - w / 2, x + w / 2) + GAP + h / 2, yB = mo.y - mo.h / 2 - GAP - h / 2;
+      const y0 = yA + (yB - yA) * tt;
+      // 從目標高度往上下交錯找最近的不碰位置
+      for (let d = 0; d <= Math.max(8, Math.abs(yB - yA) + h); d++) for (const y of d ? [y0 + d, y0 - d] : [y0])
+        if (y >= yA - h * 0.3 && y <= yB + h * 0.3 && !hits(E, pts, x, y)) { n.y = y; return n; }   // 只准在眼睛與嘴巴之間
+    } return null; };
+    for (let dy = 0; my0 + dy <= Math.max(my0, mo.maxY == null ? my0 : mo.maxY); dy += 2) {
+      mo.y = my0 + dy;
+      const n = tryAt([1, 0.9, 0.8]); if (n) return n;
+    }
+    mo.y = my0;
+    return tryAt([0.7, 0.6, 0.5, 0.42, 0.35]);
+  }
   // 眼睛在每個 x 的最低點（face 座標）；八字鬍頂部不能高過這條線
   function eyeLowProfile(p) {
     const M = eyesMaskOf(p), N = MR * 2, low = new Float32Array(N).fill(-1e9);
@@ -289,7 +316,10 @@ window.AVATAR = (() => {
         ims[l] = await loadImg(S[l].eyes);
         ims[l + 'M'] = S[l].mouth && S[l].mouth.file ? await loadImg(S[l].mouth.file) : null;
       }
+      const ne = cur.nose && LIB.nose && LIB.nose[cur.nose];
+      const nim = ne ? await loadImg(ne.file) : null;
       return () => {
+        const nimc = nim ? recolorSkin(nim, sk, refL) : null;       // 鼻子跟膚色
         const HL = G.chin - G.top;                                  // 頭長（頭頂→下巴）
         // 髮際線（head 座標）：前髮中線最低處；光頭＝頭頂往下一點
         const hf = P.hairFront;
@@ -351,10 +381,11 @@ window.AVATAR = (() => {
               const mid = (L + R) / 2 - G.cx;
               mx = Math.max(mid - (R - L) * 0.4 + w / 2, Math.min(mid + (R - L) * 0.4 - w / 2, mx));
             }
-            p.mouth = { im: mim, w, h: w * ar, x: mx, y: my };
+            p.mouth = { im: mim, w, h: w * ar, x: mx, y: my, maxY: chinL - w * ar / 2 };
             separate(p, chinL);                                      // 像素級：嘴巴不准碰到眼睛眉毛
           }
           p.eyeLow = eyeLowProfile(p);                               // 眼睛實際最低點（八字鬍用）
+          p.nose = nimc && p.mouth ? placeNose(p, nimc, ne.k * SF * Math.min(1.15, sv) * (pr.noseScale || 1), Txx, pr.noseY) : null;
         }
       };
     })());
@@ -489,6 +520,9 @@ window.AVATAR = (() => {
     return true;
   }
   function afterPart(key, ctx) {
+    if ((key === 'face' || key === 'faceHurt') && P[key].nose) {
+      const n = P[key].nose; ctx.drawImage(n.im, n.x - n.w / 2, n.y - n.h / 2, n.w, n.h);
+    }
     if ((key === 'face' || key === 'faceHurt') && P[key].mouth) {
       const m = P[key].mouth; ctx.drawImage(m.im, m.x - m.w / 2, m.y - m.h / 2, m.w, m.h);
     }
@@ -511,6 +545,10 @@ window.AVATAR = (() => {
     _overlap: () => ['face', 'faceHurt'].map(k => { const p = P[k]; if (!p.mouth) return null;
       const E0 = eyesMaskOf(p), pts = mouthPixels(p.mouth);
       for (let g = 0; g <= GAP + 3; g++) if (hits(g ? dilate(E0, g) : E0, pts, p.mouth.x, p.mouth.y)) return g;   // g＝碰到時的膨脹量
+      if (p.nose) { const MM = alphaMask(c => c.drawImage(p.mouth.im, p.mouth.x - p.mouth.w / 2, p.mouth.y - p.mouth.h / 2, p.mouth.w, p.mouth.h));
+        for (let i = 0; i < E0.length; i++) E0[i] |= MM[i];
+        const np = mouthPixels(p.nose);
+        for (let g = 0; g <= GAP; g++) if (hits(g ? dilate(E0, g) : E0, np, p.nose.x, p.nose.y)) return 'nose' + g; }
       return 99; }),
     reset: () => set(Object.assign({}, DEF)),
     hairCat, faceCat, bodyCat,

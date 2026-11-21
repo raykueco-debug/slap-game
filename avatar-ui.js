@@ -58,6 +58,7 @@
         .concat(Object.entries(LIB['face_' + g()] || {}).map(([k, v]) => ({ id: k, name: v.name, img: v.smug && v.smug.file }))) },
     { key: 'body', name: '體型', list: () => (g() === 'm' ? [{ id: 'orig', name: '原本', img: 'parts/torso.png' }] : [])
         .concat(Object.entries(LIB['body_' + g()] || {}).map(([k, v]) => ({ id: k, name: v.name, img: v.torso && v.torso.file }))) },
+    { key: 'nose', name: '鼻子', list: () => [none].concat(Object.entries(LIB.nose || {}).map(([k, v]) => ({ id: k, name: v.name, img: v.file }))) },
     { key: 'glasses', name: '眼鏡', list: () => accOf('g_') },
     { key: 'beardUp', name: '唇上鬍', list: () => beardOf('up_') },
     { key: 'beardLow', name: '唇下鬍', list: () => beardOf('low_') },

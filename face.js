@@ -89,6 +89,13 @@ window.FACEMATCH = (() => {
   const lum = (r, g, b) => 0.3 * r + 0.59 * g + 0.11 * b;
   // 特殊造型不參加自動配對（只能手動選）
   const NO_AUTO = new Set(['cornrow', 'dreads', 'mohawk', 'manbun', 'balding', 'spacebuns', 'drill', 'uneven', 'bucktooth', 'dot', 'star']);
+  // 鼻子：w＝鼻翼寬、l＝鼻長（-1 小／短 ~ 1 大／長）；歪鼻、紅鼻頭只給手動挑
+  const NOSE_TAG = {
+    dot: { w: -1, l: -1 }, hook: { w: -.6, l: -.2 }, tri: { w: -.3, l: -.6 }, nostril: { w: -.5, l: -1 },
+    button: { w: -.1, l: -.4 }, potato: { w: .6, l: .3 }, pointy: { w: -.5, l: .7 }, eagle: { w: .1, l: .9 },
+    flat: { w: .9, l: -.6 }, snub: { w: .4, l: -.6 }, flared: { w: 1, l: 0 }, long: { w: -.8, l: 1 },
+    anime: { w: -.7, l: .2 }, droopy: { w: .9, l: .9 },
+  };
   function nearest(table, feat, W) {
     let best = null, bd = 1e9;
     for (const id in table) {
@@ -312,6 +319,9 @@ window.FACEMATCH = (() => {
       size: (d(33, 133) + d(263, 362)) / 2 / faceW,                 // 眼睛寬
       mouthT: (mouthY - eyeY) / Math.max(1, chin - eyeY),           // 嘴巴在 眼→下巴 的位置
       mouthW: d(61, 291) / faceW,                                   // 嘴寬
+      noseW: d(64, 294) / faceW,                                    // 鼻翼寬
+      noseL: (Lm[2].y - Lm[168].y) / Math.max(1, faceH),            // 鼻長（鼻根→鼻下）
+      noseT: (Lm[2].y - eyeY) / Math.max(1, mouthY - eyeY),         // 鼻底在 眼→嘴 的位置
     };
     const MEAN = { forehead: 0.28, eyeT: 0.39, gap: 0.44, size: 0.20, mouthT: 0.59, mouthW: 0.46 };   // 樣本照校正的一般值
     const clp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -322,7 +332,10 @@ window.FACEMATCH = (() => {
       eyeScale: 1 + clp((raw.size / MEAN.size - 1) * 1.2, -0.2, 0.2),
       mouthDy: clp((raw.mouthT - MEAN.mouthT) * 0.25, -0.04, 0.04),
       mouthScale: 1 + clp((raw.mouthW / MEAN.mouthW - 1) * 1.2, -0.2, 0.2),
+      noseY: clp(0.5 + (raw.noseT - 0.66) * 2.5, 0.2, 0.8),                            // 鼻子在 眼→嘴 間的高低
     };
+    // 鼻型：女生整體偏小一點（Q 版女生鼻子小）
+    const nf = { w: clp((raw.noseW / 0.27 - 1) * 7, -1, 1) - (gender === 'f' ? 0.4 : 0), l: clp((raw.noseL / 0.29 - 1) * 7, -1, 1) - (gender === 'f' ? 0.3 : 0) };
 
     // 眼鏡：眼睛外圍一圈的邊緣強度 vs 臉頰；墨鏡：眼睛區很暗
     const edge = (x, y) => { const a = lum(...at(x - 1, y)), b = lum(...at(x + 1, y)), c = lum(...at(x, y - 1)), e = lum(...at(x, y + 1)); return Math.abs(a - b) + Math.abs(c - e); };
@@ -390,6 +403,7 @@ window.FACEMATCH = (() => {
       hair: feat.bald ? 'bald' : nearest(HAIR_TAG[hairCat], feat, { fr: 3, len: 2, vol: 1.5, wid: 1, asym: 1, bald: 2 }),
       face: nearest(FACE_TAG[faceCat], ff, { ar: 30, tilt: 2, size: 2, uneven: 1, lips: .5 }),
       head: nearest(Object.fromEntries(Object.entries(HEAD_TAG).filter(([k]) => k.startsWith(g + '_'))), hf, { wr: 8, jaw: 6, full: 10 }),
+      nose: nearest(NOSE_TAG, nf, { w: 1, l: 1 }),
       glasses, prop, ...(beard || {}),
     };
     // 只挑造型庫裡真的有的
@@ -397,7 +411,7 @@ window.FACEMATCH = (() => {
     if (pick.hair !== 'bald' && !(LIB[hairCat] && LIB[hairCat][pick.hair])) delete pick.hair;
     if (!(LIB[faceCat] && LIB[faceCat][pick.face])) delete pick.face;
     if (!(LIB.head && LIB.head[pick.head])) delete pick.head;
-    return { pick, debug: { raw, prop, feat, ff, hf, hairArea: +hairArea.toFixed(2), sideCov: +sideCov.toFixed(2), belowCov: +belowCov.toFixed(2), topArea: +topArea.toFixed(3), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
+    return { pick, debug: { raw, prop, nf, feat, ff, hf, hairArea: +hairArea.toFixed(2), sideCov: +sideCov.toFixed(2), belowCov: +belowCov.toFixed(2), topArea: +topArea.toFixed(3), beard: beardDbg, rim: +rim.toFixed(2), skinRel: +skinRel.toFixed(3), p95, accF: +accF.toFixed(3), eyeDark: +eyeDark.toFixed(2), skinRGB: skinRGB.map(Math.round), hairRGB: hairRGB.map(Math.round) } };
   }
   return { analyze, HAIR_TAG, FACE_TAG, HEAD_TAG };
 })();

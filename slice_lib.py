@@ -70,6 +70,11 @@ SHEETS = {
         ('low_stubble', '下巴鬍渣'), ('low_boxed', '方下巴鬍'), ('low_anchor', '錨形下巴鬍'), ('low_ducktail', '鴨尾下巴鬍'),
         ('side_stubble', '鰓邊鬍渣'), ('side_heavystubble', '鰓邊濃鬍渣'), ('side_sideburn', '長鬢角'), ('side_curly', '捲鰓鬍'),
         ('under_neck', '脖子鬍'), ('under_garibaldi', '圓大頷下鬍'), ('under_ducktail', '尖頷下鬍'), ('under_wizard', '超長鬍')]],
+    'NOSE-1': [('nose', i, n, None) for i, n in [
+        ('dot', '小點'), ('hook', '小勾'), ('tri', '小三角'), ('nostril', '兩點鼻孔'),
+        ('button', '圓鈕鼻'), ('potato', '蒜頭鼻'), ('pointy', '尖長鼻'), ('eagle', '鷹勾鼻'),
+        ('flat', '塌寬鼻'), ('snub', '朝天鼻'), ('flared', '寬鼻翼'), ('long', '細長鼻樑'),
+        ('crooked', '歪鼻'), ('red', '紅鼻頭'), ('anime', '動漫L鼻'), ('droopy', '大肉鼻')]],
     'HEAD-M2': [('head', i, n, None) for i, n in [
         ('m_chubby', '圓胖臉'), ('m_fat', '雙下巴'), ('m_jowl', '寬垂頰'), ('m_fatsquare', '胖方臉'),
         ('m_baby', '娃娃臉'), ('m_oval2', '鵝蛋臉'), ('m_narrow', '窄長臉'), ('m_bony', '瘦削臉'),

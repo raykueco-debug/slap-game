@@ -11968,5 +11968,183 @@
    "cell": 316.5,
    "k": 0.3247232472324723
   }
+ },
+ "nose": {
+  "dot": {
+   "name": "小點",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/dot.png",
+   "w": 33,
+   "h": 32,
+   "cx": 24.0,
+   "top": 166.0,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "hook": {
+   "name": "小勾",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/hook.png",
+   "w": 64,
+   "h": 65,
+   "cx": 4.5,
+   "top": 146.0,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "tri": {
+   "name": "小三角",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/tri.png",
+   "w": 65,
+   "h": 51,
+   "cx": -13.0,
+   "top": 159.0,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "nostril": {
+   "name": "兩點鼻孔",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/nostril.png",
+   "w": 74,
+   "h": 25,
+   "cx": -31.5,
+   "top": 170.0,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "button": {
+   "name": "圓鈕鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/button.png",
+   "w": 80,
+   "h": 63,
+   "cx": 23.5,
+   "top": 140.75,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "potato": {
+   "name": "蒜頭鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/potato.png",
+   "w": 134,
+   "h": 136,
+   "cx": 5.5,
+   "top": 101.75,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "pointy": {
+   "name": "尖長鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/pointy.png",
+   "w": 67,
+   "h": 122,
+   "cx": -20.0,
+   "top": 107.75,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "eagle": {
+   "name": "鷹勾鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/eagle.png",
+   "w": 114,
+   "h": 146,
+   "cx": -32.5,
+   "top": 94.75,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "flat": {
+   "name": "塌寬鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/flat.png",
+   "w": 148,
+   "h": 70,
+   "cx": 23.5,
+   "top": 126.5,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "snub": {
+   "name": "朝天鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/snub.png",
+   "w": 125,
+   "h": 83,
+   "cx": 5.0,
+   "top": 112.5,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "flared": {
+   "name": "寬鼻翼",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/flared.png",
+   "w": 172,
+   "h": 121,
+   "cx": -10.5,
+   "top": 87.5,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "long": {
+   "name": "細長鼻樑",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/long.png",
+   "w": 54,
+   "h": 156,
+   "cx": -30.5,
+   "top": 68.5,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "crooked": {
+   "name": "歪鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/crooked.png",
+   "w": 95,
+   "h": 155,
+   "cx": 27.0,
+   "top": 48.25,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "red": {
+   "name": "紅鼻頭",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/red.png",
+   "w": 114,
+   "h": 101,
+   "cx": 5.5,
+   "top": 88.25,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "anime": {
+   "name": "動漫L鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/anime.png",
+   "w": 54,
+   "h": 89,
+   "cx": -21.5,
+   "top": 85.25,
+   "cell": 319.0,
+   "k": 0.225
+  },
+  "droopy": {
+   "name": "大肉鼻",
+   "sheet": "NOSE-1",
+   "file": "lib/nose/droopy.png",
+   "w": 150,
+   "h": 173,
+   "cx": -29.5,
+   "top": 44.25,
+   "cell": 319.0,
+   "k": 0.225
+  }
  }
 }
